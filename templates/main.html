@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+{% block body %}
+
+<div class="container-fluid nopadding">
+  <div class="row nopadding">
+    <div class="col-md-9 scene-menu nopadding">
+      <div class="container-fluid menu nopadding">
+
+        <ul class="menu-buttons">
+          <li>
+            <input id="open-image" type="file" name="img" class="btn btn-outline-secondary" accept="image/jpeg,image/png,image/gif">
+          </li>
+          <li>
+            Выберите модель:
+            <select id="model">
+              <option value="0">Не выбрано</option>
+              <option value="1">DRIVE(ретина)</option>
+              <option value="2">STARE(ретина)</option>
+              <option value="3">ENDO(эндоскопия)</option>
+            </select>
+          </li>
+          <li>
+            <button id="segment-image">Processing</button>
+          </li>
+          <li>
+            <a href="#" class="button" id="save-image-btn" download="main_image.png">Download</a>
+          </li>
+        </ul>
+
+        <ul class="menu-layers">
+          <li>
+            <div class="menu-layer">
+              <p>
+                Оригинал
+              </p>
+              <input id="image-visibility" type="checkbox" checked>
+              <input id="image-opacity" type="range" min="0" max="100" step="1" value="50">
+            </div>
+          </li>
+          <li>
+            <div class="menu-layer">
+              <p>
+                Сосуды
+              </p>
+              <input id="vessels-visibility" type="checkbox" checked>
+              <input id="vessels-opacity" type="range" min="0" max="100" step="1" value="50">
+            </div>
+          </li>
+          <li>
+            <div class="menu-layer">
+              <p>
+                Точки ветвления
+              </p>
+              <input id="dots-visibility" type="checkbox" checked>
+              <input id="dots-opacity" type="range" min="0" max="100" step="1" value="50">
+            </div>
+          </li>
+        </ul>
+
+      </div>
+      <div class="container-fluid image nopadding">
+        <img id="canvas-buffer" class="hidden-xl-down" src="" />
+        <canvas id="main-canvas"></canvas>
+        <canvas class="d-xl-none" id="real-canvas"></canvas>
+      </div>
+    </div>
+    <div class="col-md-3 toolbox nopadding">
+
+      <ul class="nav nav-tabs" id="modeTab" role="tablist">
+        <li class="nav-item">
+          <a class="nav-link active" id="parameters-tab" data-toggle="tab" href="#parameters" role="tab" aria-controls="parameters" aria-expanded="true">Parameters</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="report-tab" data-toggle="tab" href="#report" role="tab" aria-controls="report">Report</a>
+        </li>
+      </ul>
+  <div class="tab-content">
+    <div class="tab-pane active show fade" id="parameters" role="tabpanel" aria-labelledby="parameters-tab">
+      <div class="vessels">
+        <p class="text-center">
+          Параметры сосудов
+        </p>
+        <!-- Nav tabs -->
+
+        <div id="vessel_1">
+          <div id="tester" style="width:24vw;height:20vh;"></div>
+          <div>
+            <table class="table table-bordered table-inverse table-hover table-sm nopadding">
+              <tbody>
+                <tr class="bg-primary">
+                  <td>AUC</td>
+                  <td id="param7">0</td>
+                  <td>Перегибы</td>
+                  <td id="param8">0</td>
+                </tr>
+                <tr class="bg-primary">
+                  <td>Средняя ампл. (модуль)</td>
+                  <td id="param9">0</td>
+                  <td>Дисп. ампл.</td>
+                  <td id="param10">0</td>
+                </tr>
+                <tr class="bg-primary">
+                  <td>Макс ампл.</td>
+                  <td id="param11">0</td>
+                  <td>Мин. ампл.</td>
+                  <td id="param12">0</td>
+                </tr>
+                <tr class="bg-primary">
+                  <td>Cр. ампл. вершин</td>
+                  <td id="param13">0</td>
+                  <td>Дисп. ампл. вершин</td>
+                  <td id="param14">0</td>
+                </tr>
+                <tr class="bg-primary">
+                  <td>Ср.радиус</td>
+                  <td id="param3">0</td>
+                  <td>СКО</td>
+                  <td id="param4">0</td>
+                </tr>
+                <tr class="bg-primary">
+                  <td>Площадь</td>
+                  <td id="param5">0</td>
+                  <td>Длина</td>
+                  <td id="param6">0</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <table class="table table-bordered table-inverse table-hover table-sm">
+              <tbody>
+                <tr class="bg-primary">
+                  <td width="75%">Радиус выделенного пикселя:</td>
+                  <td width="25%" align="center" id="param2">0</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="btn-group btn-group-justified" role="group" aria-label="Basic example">
+          <button type="button" id="merge_btn" class="btn btn-secondary">Объединить</button>
+          <button type="button" id="clear_list_btn" class="btn btn-secondary">Отменить</button>
+          <button type="button" id="add_to_report_btn" class="btn btn-secondary">В отчет</button>
+        </div>
+
+      </div>
+
+        <div class="dots">
+          <p class="text-center">
+            Параметры точек ветвления
+          </p>
+
+          <table class="table table-bordered table-inverse table-hover table-sm">
+            <thead class="thead-inverse">
+              <!--<tr>
+                <th>Параметр</th>
+                <th>Значение</th>
+              </tr>-->
+            </thead>
+            <tbody>
+              <tr class="bg-primary">
+                <td>Количество</td>
+                <td class='param_value'>0</td>
+              </tr>
+              <tr class="bg-primary">
+                <td>Выделено</td>
+                <td>0</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="btn-group btn-group-justified" role="group" aria-label="Basic example">
+            <button id="del-dots-btn" type="button" class="btn btn-secondary">Удалить точки</button>
+            <button id="erase-dots-btn" type="button" class="btn btn-secondary">Сбросить</button>
+          </div>
+        </div>
+
+        <div class="global">
+          <p class="text-center">
+            Параметры сети
+          </p>
+          <table class="table table-bordered table-inverse table-hover table-sm">
+            <!--<thead class="thead-inverse">
+              <tr>
+                <th>Параметр</th>
+                <th>Значение</th>
+                <th>Параметр</th>
+                <th>Значение</th>
+              </tr>
+            </thead>-->
+            <tbody>
+              <tr class="bg-primary">
+                <td>Длина</td>
+                <td class="param_value">0</td>
+                <td>Площадь</td>
+                <td class="param_value">0</td>
+              </tr>
+              <tr class="bg-primary">
+                <td>Область</td>
+                <td class="param_value">0</td>
+                <td>Компактность</td>
+                <td class="param_value">0</td>
+              </tr>
+              <tr class="bg-primary">
+                <td>Ветвистость</td>
+                <td class="param_value">0</td>
+                <td>Извилистость</td>
+                <td class="param_value">0</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <button type="button" class="btn btn-secondary">Обновить</button>
+        </div>
+      </div>
+
+    <div class="tab-pane fade" id="report" role="tabpanel" aria-labelledby="report-tab">
+      <ul id="report-list">
+
+      </ul>
+      <input type="text" name="csv_name" value="csv_name">
+      <a id="save_report_csv_ref">Save Report (Vessels) </a>
+      <input type="text" name="global_csv_name" value="global_name">
+      <a id="save_report_global_ref">Save Report (Global)</a>
+      <input type="text" name="image_csv_name" value="image_name">
+      <a id="save_report_img_ref">Save Image</a>
+    </div>
+  </div>
+
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+
+  <script>
+
+  var trace1 = {
+  x: math.range(0,10)._data,
+  y: math.zeros(10)._data,
+  mode: 'markers',
+
+  //type: 'scatter'
+  };
+
+  var data = [trace1];
+
+  var layout = {
+      title: 'First 10 harmonics',
+      showlegend: false,
+      xaxis: {title: 'Period'},
+      yaxis: {title: 'Freq(log1p)'},
+
+      margin: {
+        l: 50,
+        r: 10,
+        b: 30,
+        t: 50,
+        pad: 0
+      },
+  };
+
+
+
+  Plotly.newPlot('tester', data, layout, {scrollZoom: true, displayModeBar: false});
+
+  </script>
+	<script type = "text/javascript" src = "{{ url_for('static', filename = 'canvas.js') }}" ></script>
+  <script type = "text/javascript" src = "{{ url_for('static', filename = 'vessel_window.js') }}" ></script>
+
+{% endblock %}

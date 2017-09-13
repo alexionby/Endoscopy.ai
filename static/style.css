@@ -1,0 +1,88 @@
+.menu {
+  background-color: azure;
+}
+
+.toolbox {
+  background-color: turquoise;
+}
+
+#open-image {
+  padding: 0;
+}
+
+table {
+  padding: 10px 0;
+}
+
+div#parameters > div {
+  padding-bottom: 10px;
+}
+
+.vessels {
+  background-color: mediumblue;
+  padding: 0px 10px;
+}
+
+.dots {
+  background-color: orange;
+  padding: 0px 10px;
+}
+
+.global {
+  background-color: violet;
+  padding: 0px 10px;
+}
+
+.vessels ul {
+  background-color: blue;
+}
+
+.vessels .tab-content {
+  background-color: yellow;
+}
+
+.image {
+  height: calc(100vh - 75px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: dimgray;
+}
+
+.menu-buttons {
+  height: 35px;
+  padding-left: 0;
+  margin-bottom: 0;
+  list-style: none;
+  background-color: mediumaquamarine;
+  display: flex;
+  justify-content: space-between;
+}
+
+.menu-layers {
+  height: 40px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  display: flex;
+  justify-content: space-around;
+}
+
+.menu-layer {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.main-canvas {
+  background-color: dimgray;
+}
+
+.nopadding {
+   padding: 0 !important;
+   margin: 0 !important;
+}
+
+.tab-content {
+  overflow: auto;
+  height: calc(100vh - 50px);
+}

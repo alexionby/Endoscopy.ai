@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+    {% block body %}
+
+      <div class="jumbotron">
+        <div class="container text-center">
+          <h1>Выделение и анализ сосудов на биомедицинских изображениях</h1>
+        </div>
+      </div>
+
+    <div class="container text-center">
+    <div class="row">
+      <div class="col-md-6">
+        <div class="jumbotron">
+          <h2>Инструкция по запуску на своей машине</h2>
+          <ol class="text-left">
+            <li>Скачать и установить Python 3.6 отсюда: <a href="https://www.continuum.io/downloads">https://www.continuum.io/downloads</a> В процессе установки везде вводим <var>"yes"</var></li>
+            <li>Установить драйвера на видеокарту, как показано здесь: <a href="https://askubuntu.com/questions/851069/latest-nvidia-driver-on-ubuntu-16-04">https://askubuntu.com/questions/851069/latest-nvidia-driver-on-ubuntu-16-04</a> </li>
+            <li>Открыть терминал. <kbd>Super</kbd> -> terminal. Ввести: </br><samp>conda install tensorflow-gpu</samp> </li>
+            <li>
+              Далее ввести:
+              </br><samp>conda install keras</samp>
+              </br><samp>conda install -c conda-forge opencv3</samp>
+            </li>
+            <li>
+              Скачать и распаковать архив: <a href="{{ url_for('static', filename='source/source.tar.gz') }}">source.tar.gz</a>
+            </li>
+            <li>
+              Зайти в папку. Кликнуть правой клавишей и выбрать: <br/> <var>Open in Terminal</var>.
+              Ввести команду: <br/> <samp>python start.py</samp>
+            </li>
+            <li>
+              В браузере перейти по адресу <samp>127.0.0.1:5000</samp>
+            </li>
+          </ol>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="jumbotron">
+          <h2>Инструкция по использованию</h2>
+        </div>
+      </div>
+    </div>
+
+    <a role="button" aria-pressed="true" class="btn btn-success btn-lg active" href="{{ url_for('main') }}">Все понятно, начать онлайн</a>
+  </div>
+
+    {% endblock %}
