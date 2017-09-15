@@ -135,7 +135,9 @@ def segmentation():
     cv2.imwrite(os.path.join('static/images', filename + '_1.png'), prediction)
     dots_dict, vess_dict, radius_dict, params_dict, global_params, plot_params, frequency_params = postprocessing(prediction)
 
-    print(plot_params, frequency_params, params_dict)
+    print(len(dots_dict), len(vess_dict), len(radius_dict), len(params_dict), len(global_params), len(plot_params), len(frequency_params))
+
+    #print(plot_params, frequency_params, params_dict)
 
     #print('before jsonify')
     #print(plot_params)

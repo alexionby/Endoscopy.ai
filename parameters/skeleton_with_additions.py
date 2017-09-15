@@ -37,6 +37,9 @@ def zhangSuen(image):
     Image_Thinned = image.copy()  # deepcopy to protect the original image
     changing1 = changing2 = 1        #  the points to be removed (set as 0)
 
+    print('here')
+    print(image.shape, Image_Thinned)
+
 
     while changing1 or changing2:   #  iterates until no further changes occur in the image
 

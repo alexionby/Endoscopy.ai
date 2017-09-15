@@ -43,6 +43,7 @@ $(function(){
     this.states = ['parameters','report'];
     this.current_state = 'parameters';
     this.report_vessels = [];
+
   }
 
   Scene.prototype.add_to_report = function() {
@@ -52,35 +53,14 @@ $(function(){
   }
 
   Scene.prototype.set_visible_size = function(container) {
-
     this.max_width = container.width() * 0.99;
     this.max_height = container.height() * 0.99;
-
   }
 
   Scene.prototype.draw_vessels = function() {
-
     var real_canvas = this.real_canvas;
     var ctx_real = real_canvas.getContext('2d');
     var vessels = this.vessels;
-
-    //ctx_real.save();
-
-    /*
-    for (key in vessels) {
-      for ( i in vessels[key] ) {
-
-        //ctx_real.globalAlpha = this.vessels_opacity / 100
-        ctx_real.beginPath();
-        ctx_real.arc(vessels[key][i][1], vessels[key][i][0], 1, 0, 2 * Math.PI, false);
-        ctx_real.fillStyle = "rgb(255,0,0)";
-        ctx_real.fill();
-
-      }
-    }
-    //ctx_real.restore()
-    */
-
     var main_canvas = this.main_canvas;
     var ctx_main = main_canvas.getContext('2d');
     var vessels = this.vessels;
@@ -88,8 +68,8 @@ $(function(){
     ctx_main.save();
     ctx_main.globalAlpha = this.vessels_opacity / 100
 
-    for ( key in vessels ) {
-      for ( i in vessels[key] ) {
+    for ( const key in vessels ) {
+      for ( const i in vessels[key] ) {
         ctx_main.beginPath();
         ctx_main.arc(vessels[key][i][1] * this.multiplier, vessels[key][i][0] * this.multiplier, 1, 0, 2 * Math.PI, false);
         ctx_main.fillStyle = "rgb(255,0,0)";
@@ -97,8 +77,8 @@ $(function(){
       }
     }
 
-    for ( key of this.report_vessels ) {
-      for ( i in vessels[key] ) {
+    for ( const key of this.report_vessels ) {
+      for ( const i in vessels[key] ) {
         ctx_main.beginPath();
         ctx_main.arc(vessels[key][i][1] * this.multiplier, vessels[key][i][0] * this.multiplier, 1, 0, 2 * Math.PI, false);
         ctx_main.fillStyle = "rgb(255,0,255)";
@@ -108,7 +88,7 @@ $(function(){
 
     if ( this.current_state == 'parameters' ) {
       if (this.current_vessel > -1) {
-        for ( i of vessels[this.current_vessel] ) {
+        for ( const i of vessels[this.current_vessel] ) {
           ctx_main.beginPath();
           ctx_main.arc(i[1] * this.multiplier, i[0] * this.multiplier, 1, 0, 2 * Math.PI, false);
           ctx_main.fillStyle = "rgb(0,255,255)";
@@ -118,8 +98,8 @@ $(function(){
     }
 
     if ( this.current_state == 'parameters' ) {
-      for ( key of this.selected_vessels ) {
-        for ( i of vessels[key] ) {
+      for ( const key of this.selected_vessels ) {
+        for ( const i of vessels[key] ) {
           ctx_main.beginPath();
           ctx_main.arc(i[1] * this.multiplier, i[0] * this.multiplier, 1, 0, 2 * Math.PI, false);
           ctx_main.fillStyle = "rgb(255,255,255)";
@@ -129,24 +109,19 @@ $(function(){
     }
 
     if ( this.current_state == 'report' ) {
-      for ( key of this.report_vessels) {
-
+      for ( const key of this.report_vessels) {
         if (vessels[key] === undefined) {
-          var index = this.report_vessels.indexOf(key);
+          let index = this.report_vessels.indexOf(key);
           this.report_vessels.splice(index, 1);
         }
 
         ctx_main.font = "18px Arial";
         ctx_main.fillStyle = "cyan";
         ctx_main.textAlign = "center";
-        console.log(vessels[key][0][1], vessels[key].slice(-1)[0][1] )
-        console.log( this.multiplier * (vessels[key][0][1] + vessels[key].slice(-1)[0][1]) / 2 )
         ctx_main.fillText(key, this.multiplier * (vessels[key][0][1] + vessels[key].slice(-1)[0][1]) / 2 , this.multiplier * (vessels[key][0][0] + vessels[key].slice(-1)[0][0]) / 2);
       }
     }
-
     ctx_main.restore()
-
   }
 
   //merge is here!!!!
@@ -177,9 +152,6 @@ $(function(){
       delete this.vessels_parameters[index_1];
       delete this.vessels_parameters[index_2];
 
-      console.log( vess_a[0],vess_a.slice(-1)[0]);
-      console.log( vess_b[0],vess_b.slice(-1)[0]);
-
       let that = this;
 
       $.ajax({
@@ -196,17 +168,14 @@ $(function(){
       })
         .done(function( response ) {
 
-          index = response['index']
+          var index = response['index']
 
           that.vessels[index] = response['vessel'][index];
           that.vessels_parameters[index] = response['params'][index];
           that.radius[index] = response['radius'][index];
-
           that.harmonics[index] = response['harmonics'][index];
           that.plot_params[index] = response['plot_params'][index];
-
           that.selected_vessels = [];
-          //that.draw_scene();
 
           var vessel = index;
           that.current_vessel = vessel;
@@ -238,6 +207,8 @@ $(function(){
 
   Scene.prototype.select_object = function() {
 
+      var x,y;
+
       function getMousePos(canvas, evt) {
         var rect = canvas.getBoundingClientRect();
         return {
@@ -263,7 +234,7 @@ $(function(){
         var dot = undefined;
 
         for (key in dots) {
-          var distance = Math.pow(dots[key][1] * that.multiplier - mousePos.x, 2) + Math.pow(dots[key][0] * that.multiplier - mousePos.y , 2);
+          var distance = math.pow(dots[key][1] * that.multiplier - mousePos.x, 2) + math.pow(dots[key][0] * that.multiplier - mousePos.y , 2);
           if (distance < min) {
             min = distance;
             dot = key;
@@ -271,19 +242,14 @@ $(function(){
         }
 
         if (dot) {
-
           if (that.selected_dots.includes(dot)) {
-
             var index = that.selected_dots.indexOf(dot);
             that.selected_dots.splice(index, 1);
             that.draw_scene();
-
           } else {
-
             that.selected_dots.push(dot);
             that.draw_scene();
           }
-
           $('.dots td:last').text(that.selected_dots.length);
         }
       });
@@ -300,7 +266,7 @@ $(function(){
 
         for (key in vessels) {
           for ( i in vessels[key] ) {
-            var distance = Math.pow(vessels[key][i][1] * that.multiplier - mousePos.x, 2) + Math.pow(vessels[key][i][0] * that.multiplier - mousePos.y , 2);
+            var distance = math.pow(vessels[key][i][1] * that.multiplier - mousePos.x, 2) + math.pow(vessels[key][i][0] * that.multiplier - mousePos.y , 2);
             if (distance < min) {
               min = distance;
               n = vessels[key][i][1];
@@ -311,7 +277,6 @@ $(function(){
           }
         }
 
-        // Adding Object to report_list
         if (evt.ctrlKey) {
           that.selected_vessels.push(vessel);
 
@@ -364,7 +329,7 @@ $(function(){
     var ctx_main = this.main_canvas.getContext('2d');
 
     ctx_main.save();
-    for (key in this.dots) {
+    for ( const key in this.dots) {
 
       ctx_main.globalAlpha = this.dots_opacity / 100 * this.dots_is_visible;
       ctx_main.beginPath();
@@ -374,7 +339,7 @@ $(function(){
 
     }
 
-    for (key of this.selected_dots) {
+    for ( const key of this.selected_dots) {
 
       ctx_main.globalAlpha = this.dots_opacity / 100 * this.dots_is_visible;
       ctx_main.beginPath();
@@ -427,7 +392,6 @@ $(function(){
     if(typeof this.selected_pixel !== 'undefined') {
       this.draw_selected_pixel();
     }
-
   }
 
   Scene.prototype.draw_selected_pixel = function() {
@@ -465,6 +429,8 @@ $(function(){
         "animation-iteration-count" : "infinite"
       });
     }
+
+    $('tr.bg-primary td:nth-child(2n)').text('0')
 
     var date = + new Date()
     document.cookie = "filename=" + date
@@ -512,8 +478,6 @@ $(function(){
 
       that.report_vessels = [];
 
-      console.log(that);
-
       $(":checkbox").prop('checked', true);
       $(".menu-layer input[type=range]").val(100);
 
@@ -523,8 +487,6 @@ $(function(){
     }
 
   Scene.prototype.segment_image = function() {
-
-    //this.draw_image();
 
     $('#segment-image').prop('disabled', true);
 
@@ -617,14 +579,14 @@ $(function(){
   });
 
   $('#modeTab a#report-tab').click(function (e) {
-    e.preventDefault()
-    $(this).tab('show')
+    e.preventDefault();
+    $(this).tab('show');
     scene.current_state = 'report';
     scene.draw_scene();
 
     $("ul#report-list").empty();
 
-    for (vessel of scene.report_vessels ) {
+    for (const vessel of scene.report_vessels ) {
       $("ul#report-list").append('<li><span>' + vessel + '</span><button type="button" class="btn btn-danger">Del</button></li>');
     }
 
@@ -646,7 +608,7 @@ $(function(){
     result += keys.join(columnDelimiter);
     result += lineDelimiter;
 
-    for (key of keys) {
+    for (const key of keys) {
       result += scene.global_parameters[key];
       result += columnDelimiter;
     }
@@ -673,46 +635,36 @@ $(function(){
     var temp_link, filename, csv;
     var index_and_params = []
 
-    for ( key of scene.report_vessels ) {
+    for ( const key of scene.report_vessels ) {
 
       index_and_params = [key].concat(scene.vessels_parameters[key]);
       index_and_params = index_and_params.concat(scene.harmonics[key][0]);
       index_and_params = index_and_params.concat(scene.harmonics[key][1]);
 
       data.push(index_and_params.concat(scene.plot_params[key]))
-
-      console.log(scene.plot_params[key])
-      console.log(scene.harmonics[key])
     }
 
-    columnDelimiter = ';';
-    lineDelimiter = '\n';
+    var columnDelimiter = ';';
+    var lineDelimiter = '\n';
 
-    header = ['Номер','Мин. радиус', 'Макс. радиус', 'Ср. радиус','СКО радиуса','Площадь']
+    var header = ['Номер','Мин. радиус', 'Макс. радиус', 'Ср. радиус','СКО радиуса','Площадь']
       .concat(["x0","x1","x2","x3","x4","x5","x6","x7","x8","x9"])
       .concat([0,1,2,3,4,5,6,7,8,9])
       .concat(['Площадь под кривой','Количество перегибов','Макс. амплитуда',
                'Средняя амплитуда пиков', 'Средняя амплитуда', 'Мин. амплитуда', 'Дисперсия амплитуды', 'Дисперсия пиков']);
 
-    keys = []
+    var keys = []
     keys = keys.concat(Object.keys(index_and_params)); //.concat( Object.keys(scene.plot_params) ) ;
     keys = keys.concat(Object.keys(scene.plot_params[0]));
 
-    console.log(keys)
-    console.log(data)
-
-    result = '';
+    var result = '';
     result += header.join(columnDelimiter);
     result += lineDelimiter;
 
     data.forEach(function(item) {
-        console.log(item)
 
-        ctr = 0;
+        var ctr = 0;
         keys.forEach(function( key ) {
-
-            console.log(key);
-            console.log(item[key]);
 
             if (ctr > 0) result += columnDelimiter;
 
@@ -727,16 +679,12 @@ $(function(){
     csv = result;
 
     if (!csv.match(/^data:text\/csv/i)) {
-      if (navigator.platform.slice(0,3) === "Win") {
-        csv = 'data:text/csv;charset=utf-8,' + csv;
-      } else {
-        csv = 'data:text/csv;charset=windows-1252,' + csv;
-      };
+      csv = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURI(csv);
     }
 
     temp_link = $("#save_report_csv_ref")[0]; //document.createElement('a');
     temp_link.setAttribute("type", "hidden"); // make it hidden if needed
-    temp_link.setAttribute('href', data);
+    temp_link.setAttribute('href', csv);
     temp_link.setAttribute('download', filename);
   });
 
@@ -756,11 +704,7 @@ $(function(){
 
     var index = scene.report_vessels.indexOf( $(this).prev().text() );
 
-    console.log(index)
-
     scene.report_vessels.splice( index, 1 );
-
-    console.log(scene.report_vessels);
 
     $(this).parent().remove();
     scene.draw_scene();
@@ -773,13 +717,11 @@ $(function(){
 
   $("#del-dots-btn").click( function(){
 
-    for ( key of scene.selected_dots ) {
+    for ( const key of scene.selected_dots ) {
       delete scene.dots[key];
     }
 
     $('.dots td.param_value').text(Object.keys(scene.dots).length);
-    $('.dots td:last').text(0);
-
     $('.dots td:last').text(0);
 
     scene.global_parameters['B'] = math.divide( Object.keys(scene.dots).length , scene.global_parameters['L'])
@@ -839,7 +781,5 @@ $(function(){
     "animation-duration" : "2s",
     "animation-iteration-count" : "infinite"
   });
-
-// ввести переменную "состояние""
 
 });

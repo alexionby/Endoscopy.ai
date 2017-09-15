@@ -259,13 +259,9 @@
         pad: 0
       },
   };
-
-
-
   Plotly.newPlot('harmonic-plot', data, layout, {scrollZoom: true, displayModeBar: false});
 
   </script>
 	<script type = "text/javascript" src = "{{ url_for('static', filename = 'canvas.js') }}" ></script>
-  <script type = "text/javascript" src = "{{ url_for('static', filename = 'vessel_window.js') }}" ></script>
 
 {% endblock %}
