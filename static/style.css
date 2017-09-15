@@ -2,8 +2,54 @@
   background-color: azure;
 }
 
-.toolbox {
-  background-color: turquoise;
+@keyframes attention {
+  0%    { background-color: mediumaquamarine; }
+  50%   { background-color: red; }
+  100%  { background-color: mediumaquamarine; }
+}
+
+@keyframes waiting {
+  0%    { background-color: mediumaquamarine; }
+  50%   { background-color: green; color:orange; }
+  100%  { background-color: mediumaquamarine; }
+}
+
+@media only screen and (max-width: 1920px) {
+  .toolbox {
+    background-color: turquoise;
+  }
+  * {
+    font-size: 16px;
+  }
+  #harmonic-plot {
+    height: 250px;
+  }
+}
+
+@media only screen and (max-width: 1366px) {
+  .toolbox {
+    background-color: blueviolet;
+  }
+  * {
+    font-size: 12px;
+  }
+  #harmonic-plot {
+    height: 200px;
+  }
+}
+
+@media only screen and (max-width: 1024px) {
+  .toolbox {
+    background-color: yellowgreen;
+  }
+
+  * {
+    font-size: 11px;
+  }
+
+  #harmonic-plot {
+    height: 150px;
+  }
 }
 
 #open-image {

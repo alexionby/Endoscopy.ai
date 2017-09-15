@@ -23,8 +23,6 @@ $(function(){
     this.dots_opacity = 100;
     this.dots_is_visible = true;
 
-
-
     this.current_vessel = -1;          //state and vessels
     this.selected_vessels = [];
     this.selected_dots = [];
@@ -45,9 +43,6 @@ $(function(){
     this.states = ['parameters','report'];
     this.current_state = 'parameters';
     this.report_vessels = [];
-
-
-
   }
 
   Scene.prototype.add_to_report = function() {
@@ -71,6 +66,7 @@ $(function(){
 
     //ctx_real.save();
 
+    /*
     for (key in vessels) {
       for ( i in vessels[key] ) {
 
@@ -83,6 +79,7 @@ $(function(){
       }
     }
     //ctx_real.restore()
+    */
 
     var main_canvas = this.main_canvas;
     var ctx_main = main_canvas.getContext('2d');
@@ -198,9 +195,6 @@ $(function(){
               }
       })
         .done(function( response ) {
-          alert( "Data Saved: " + response );
-          console.log(response);
-          console.log(response['harmonics'])
 
           index = response['index']
 
@@ -361,7 +355,7 @@ $(function(){
     marker: { size: 5 }
     };
 
-    Plotly.newPlot('tester', [trace1], layout, {scrollZoom: true, displayModeBar: false});
+    Plotly.newPlot('harmonic-plot', [trace1], layout, {scrollZoom: true, displayModeBar: false});
 
   }
 
@@ -463,6 +457,15 @@ $(function(){
 
   Scene.prototype.open_image = function(element) {
 
+    if ( $("#model").val() === "0") {
+      $(".menu-buttons li:nth-child(1)").css("animation","");
+      $(".menu-buttons li:nth-child(2)").css({
+        "animation": "attention",
+        "animation-duration" : "2s",
+        "animation-iteration-count" : "infinite"
+      });
+    }
+
     var date = + new Date()
     document.cookie = "filename=" + date
 
@@ -492,24 +495,46 @@ $(function(){
       that.dots_opacity = 100;
       that.dots_is_visible = true;
 
+      that.global_parameters = undefined;
+
+      that.radius = undefined;
+      that.selected_pixel = undefined;
+
+      that.current_vessel = -1;
+      that.selected_vessels = [];
+      that.selected_dots = [];
+
+      that.current_vessel_window = undefined;
+      that.vessel_windows = [];
+
+      that.harmonics = undefined;
+      that.plot_params = undefined;
+
+      that.report_vessels = [];
+
+      console.log(that);
+
       $(":checkbox").prop('checked', true);
+      $(".menu-layer input[type=range]").val(100);
 
       that.draw_scene();
+      }
 
     }
-
-  }
 
   Scene.prototype.segment_image = function() {
 
-    this.model = $("select#model")[0].value;
+    //this.draw_image();
 
-    if (this.model === "0"){
-      alert('Выберите модель!');
-      return
-    }
+    $('#segment-image').prop('disabled', true);
 
-    this.draw_image();
+    $("#segment-image").text("Please, wait");
+    $("#segment-image").css({
+      "animation": "waiting",
+      "animation-duration" : "2s",
+      "animation-iteration-count" : "infinite",
+    });
+
     var dataURL = this.real_canvas.toDataURL()
     var blobBin = atob(dataURL.split(',')[1]);
     var array = [];
@@ -573,6 +598,10 @@ $(function(){
 
       that.image.onload = image_ready;
       that.image.src = respond['path'];
+
+      $('#segment-image').prop('disabled', false);
+      $("#segment-image").text("Processing");
+      $("#segment-image").css("animation","");
     });
 
   }
@@ -607,19 +636,15 @@ $(function(){
 
   $('#save_report_global_ref').click( function(that=this) {
 
-    var temp_link, filename, csv;
-
-    console.log(scene.global_parameters)
-
+    var filename, csv, element;
     var columnDelimiter = ';';
     var lineDelimiter = '\n';
 
     var keys = Object.keys(scene.global_parameters);
+    var result = '';
 
-    result = '';
     result += keys.join(columnDelimiter);
     result += lineDelimiter;
-
 
     for (key of keys) {
       result += scene.global_parameters[key];
@@ -628,19 +653,18 @@ $(function(){
 
     csv = result.slice(0,-1) + lineDelimiter;
 
-    filename = $("#save_report_global_ref").prev().val() + '.csv' ;
+    element = $("#save_report_global_ref");
+
+    filename = element.prev().val() + '.csv' ;
 
     if (!csv.match(/^data:text\/csv/i)) {
-        csv = 'data:text/csv;charset=utf-8,' + csv;
+      csv = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURI(csv);
     }
 
-    data = encodeURI(csv);
-
-    temp_link = $("#save_report_global_ref")[0]; //document.createElement('a');
-    temp_link.setAttribute("type", "hidden"); // make it hidden if needed
-    temp_link.setAttribute('href', data);
-    temp_link.setAttribute('download', filename);
-
+    element.attr({
+      "type": "hidden",
+      "href": csv,
+      "download": filename });
   });
 
   $('#save_report_csv_ref').click( function(that=this) {
@@ -703,10 +727,12 @@ $(function(){
     csv = result;
 
     if (!csv.match(/^data:text\/csv/i)) {
+      if (navigator.platform.slice(0,3) === "Win") {
         csv = 'data:text/csv;charset=utf-8,' + csv;
+      } else {
+        csv = 'data:text/csv;charset=windows-1252,' + csv;
+      };
     }
-
-    data = encodeURI(csv);
 
     temp_link = $("#save_report_csv_ref")[0]; //document.createElement('a');
     temp_link.setAttribute("type", "hidden"); // make it hidden if needed
@@ -727,13 +753,14 @@ $(function(){
   });
 
   $('#report-list').on('click','button', function() {
+
     var index = scene.report_vessels.indexOf( $(this).prev().text() );
 
     console.log(index)
 
-    scene.report_vessels.splice($('.dots td:last').text() =  index, 1 );
+    scene.report_vessels.splice( index, 1 );
 
-    console.log(scene.report_vessels)
+    console.log(scene.report_vessels);
 
     $(this).parent().remove();
     scene.draw_scene();
@@ -766,6 +793,30 @@ $(function(){
 
   });
 
+  $("#model").change( function(){
+
+    this.model = $("#model").val();
+
+    if (this.model === "0"){
+      $('#segment-image').prop('disabled', true);
+
+      $(".menu-buttons li:nth-child(2)").css({
+        "animation": "attention",
+        "animation-duration" : "2s",
+        "animation-iteration-count" : "infinite"
+      });
+
+    } else {
+      $('#segment-image').prop('disabled', false);
+      $(".menu-buttons li:nth-child(2)").css("animation","");
+      $(".menu-buttons li:nth-child(3) * ").css({
+        "animation": "attention",
+        "animation-duration" : "2s",
+        "animation-iteration-count" : "infinite"
+      });
+    }
+  });
+
   $("#open-image").change( function(){ scene.open_image(this); });
   $(":checkbox").change( function(){ scene.set_visibility(this); } );
   $("input[type=range]").change( function(){ scene.set_opacity(this); } );
@@ -775,10 +826,20 @@ $(function(){
   $("#clear_list_btn").click(function(){ scene.clear_selected_vessels(); });
   $("#add_to_report_btn").click(function(){ scene.add_to_report(this); });
   $("#save-image-btn").click( function(){
-    var dataURL = $("#real-canvas")[0].toDataURL('image/png');
+    var dataURL = $("#main-canvas")[0].toDataURL('image/png');
     this.href = dataURL;
   });
 
-// ввесити переменную "состояние""
+  scene.model = "0";
+  $('#model').val("0");
+  $("#segment-image").prop('disabled',true);
+
+  $(".menu-buttons li:nth-child(1)").css({
+    "animation": "attention",
+    "animation-duration" : "2s",
+    "animation-iteration-count" : "infinite"
+  });
+
+// ввести переменную "состояние""
 
 });

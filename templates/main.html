@@ -83,7 +83,7 @@
         <!-- Nav tabs -->
 
         <div id="vessel_1">
-          <div id="tester" style="width:24vw;height:20vh;"></div>
+          <div id="harmonic-plot"></div>
           <div>
             <table class="table table-bordered table-inverse table-hover table-sm nopadding">
               <tbody>
@@ -94,7 +94,7 @@
                   <td id="param8">0</td>
                 </tr>
                 <tr class="bg-primary">
-                  <td>Средняя ампл. (модуль)</td>
+                  <td>Ср. ампл. (модуль)</td>
                   <td id="param9">0</td>
                   <td>Дисп. ампл.</td>
                   <td id="param10">0</td>
@@ -108,14 +108,14 @@
                 <tr class="bg-primary">
                   <td>Cр. ампл. вершин</td>
                   <td id="param13">0</td>
-                  <td>Дисп. ампл. вершин</td>
-                  <td id="param14">0</td>
-                </tr>
-                <tr class="bg-primary">
-                  <td>Ср.радиус</td>
-                  <td id="param3">0</td>
                   <td>СКО</td>
                   <td id="param4">0</td>
+                </tr>
+                <tr class="bg-primary">
+                  <td>Дисп. ампл. вершин</td>
+                  <td id="param14">0</td>
+                  <td>Ср.радиус</td>
+                  <td id="param3">0</td>
                 </tr>
                 <tr class="bg-primary">
                   <td>Площадь</td>
@@ -209,8 +209,6 @@
               </tr>
             </tbody>
           </table>
-
-          <button type="button" class="btn btn-secondary">Обновить</button>
         </div>
       </div>
 
@@ -264,7 +262,7 @@
 
 
 
-  Plotly.newPlot('tester', data, layout, {scrollZoom: true, displayModeBar: false});
+  Plotly.newPlot('harmonic-plot', data, layout, {scrollZoom: true, displayModeBar: false});
 
   </script>
 	<script type = "text/javascript" src = "{{ url_for('static', filename = 'canvas.js') }}" ></script>

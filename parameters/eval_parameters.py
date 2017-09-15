@@ -69,10 +69,16 @@ def skeletonize(src):
     img = np.copy(src)
     img_shape = img.shape[::-1]
 
+    print(1)
+
     img = cv2.pyrDown(img)
     img = cv2.pyrUp(img)
 
+    print(2)
+
     img = cv2.resize(img,img_shape, interpolation = cv2.INTER_CUBIC)
+
+    print(3)
 
     ret, img_b = cv2.threshold(img, 127,255, cv2.THRESH_BINARY)
     img_b = img_b / 255.0
@@ -164,7 +170,7 @@ def extract_vessels(skeleton, binary_image, filename='vessels.json', step=10):
                 if k < i or (k == i and n < j):
                     i,j = k,n
 
-                if len(points) > 15:
+                if len(points) > 5:
 
                     temp = np.zeros(img.shape, dtype=np.uint8)
                     temp_points = np.array(points_value)
