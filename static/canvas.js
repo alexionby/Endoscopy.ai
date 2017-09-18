@@ -60,9 +60,10 @@ $(function(){
   Scene.prototype.draw_vessels = function() {
     var real_canvas = this.real_canvas;
     var ctx_real = real_canvas.getContext('2d');
-    var vessels = this.vessels;
+
     var main_canvas = this.main_canvas;
     var ctx_main = main_canvas.getContext('2d');
+
     var vessels = this.vessels;
 
     ctx_main.save();
@@ -71,7 +72,7 @@ $(function(){
     for ( const key in vessels ) {
       for ( const i in vessels[key] ) {
         ctx_main.beginPath();
-        ctx_main.arc(vessels[key][i][1] * this.multiplier, vessels[key][i][0] * this.multiplier, 1, 0, 2 * Math.PI, false);
+        ctx_main.arc(vessels[key][i][1] * this.multiplier, vessels[key][i][0] * this.multiplier, 1, 0, 2 * math.PI, false);
         ctx_main.fillStyle = "rgb(255,0,0)";
         ctx_main.fill();
       }
@@ -80,7 +81,7 @@ $(function(){
     for ( const key of this.report_vessels ) {
       for ( const i in vessels[key] ) {
         ctx_main.beginPath();
-        ctx_main.arc(vessels[key][i][1] * this.multiplier, vessels[key][i][0] * this.multiplier, 1, 0, 2 * Math.PI, false);
+        ctx_main.arc(vessels[key][i][1] * this.multiplier, vessels[key][i][0] * this.multiplier, 1, 0, 2 * math.PI, false);
         ctx_main.fillStyle = "rgb(255,0,255)";
         ctx_main.fill();
       }
@@ -90,7 +91,7 @@ $(function(){
       if (this.current_vessel > -1) {
         for ( const i of vessels[this.current_vessel] ) {
           ctx_main.beginPath();
-          ctx_main.arc(i[1] * this.multiplier, i[0] * this.multiplier, 1, 0, 2 * Math.PI, false);
+          ctx_main.arc(i[1] * this.multiplier, i[0] * this.multiplier, 1, 0, 2 * math.PI, false);
           ctx_main.fillStyle = "rgb(0,255,255)";
           ctx_main.fill();
          }
@@ -101,7 +102,7 @@ $(function(){
       for ( const key of this.selected_vessels ) {
         for ( const i of vessels[key] ) {
           ctx_main.beginPath();
-          ctx_main.arc(i[1] * this.multiplier, i[0] * this.multiplier, 1, 0, 2 * Math.PI, false);
+          ctx_main.arc(i[1] * this.multiplier, i[0] * this.multiplier, 1, 0, 2 * math.PI, false);
           ctx_main.fillStyle = "rgb(255,255,255)";
           ctx_main.fill();
         }
@@ -159,7 +160,7 @@ $(function(){
         url: "/merge",
         data: { vess_a: JSON.stringify(vess_a),
                 vess_b: JSON.stringify(vess_b),
-                index: Math.min(index_1, index_2),
+                index: math.min(index_1, index_2),
                 rad_a: JSON.stringify(rad_a),
                 rad_b: JSON.stringify(rad_b),
                 params_a : JSON.stringify(params_a),
@@ -217,7 +218,6 @@ $(function(){
         };
       }
 
-      var vessels = this.vessels;
       var dots = this.dots;
       var canvas = this.main_canvas;
       var that = this;
@@ -256,29 +256,35 @@ $(function(){
 
       canvas.addEventListener('click', function(evt) {
 
-      console.log(evt)
-
+        let vessels = that.vessels;
         var mousePos = getMousePos(canvas, evt);
         var min = 1000;
         var n = 0;
         var m = 0;
         var vessel = undefined;
 
-        for (key in vessels) {
-          for ( i in vessels[key] ) {
+        for (const key in vessels) {
+          for (const i in vessels[key] ) {
+
             var distance = math.pow(vessels[key][i][1] * that.multiplier - mousePos.x, 2) + math.pow(vessels[key][i][0] * that.multiplier - mousePos.y , 2);
             if (distance < min) {
               min = distance;
               n = vessels[key][i][1];
               m = vessels[key][i][0];
               vessel = key;
+
               that.selected_pixel = [n,m,that.radius[key][i]];
             }
           }
         }
 
         if (evt.ctrlKey) {
-          that.selected_vessels.push(vessel);
+
+          if (that.selected_vessels.includes(vessel)) {
+            that.selected_vessels.splice(that.selected_vessels.indexOf(vessel), 1);
+          } else {
+            that.selected_vessels.push(vessel);
+          }
 
           if (that.selected_vessels.length > 2) {
             that.selected_vessels.shift();
@@ -303,10 +309,11 @@ $(function(){
           $('#param12').text( +(that.plot_params[vessel]['min_amplitude']).toFixed(4) );
           $('#param13').text( +(that.plot_params[vessel]['mean_peaks']).toFixed(4) );
           $('#param14').text( +(that.plot_params[vessel]['std_peaks']).toFixed(4) );
+
+          that.draw_plot(vessel);
         }
 
         that.draw_scene();
-        that.draw_plot(vessel);
 
       }, false);
   }
@@ -333,7 +340,7 @@ $(function(){
 
       ctx_main.globalAlpha = this.dots_opacity / 100 * this.dots_is_visible;
       ctx_main.beginPath();
-      ctx_main.arc(this.dots[key][1] * this.multiplier, this.dots[key][0] * this.multiplier, 3, 0, 2 * Math.PI, false);
+      ctx_main.arc(this.dots[key][1] * this.multiplier, this.dots[key][0] * this.multiplier, 3, 0, 2 * math.PI, false);
       ctx_main.fillStyle = "rgb(255,255,0)";
       ctx_main.fill();
 
@@ -343,7 +350,7 @@ $(function(){
 
       ctx_main.globalAlpha = this.dots_opacity / 100 * this.dots_is_visible;
       ctx_main.beginPath();
-      ctx_main.arc(this.dots[key][1] * this.multiplier, this.dots[key][0] * this.multiplier, 3, 0, 2 * Math.PI, false);
+      ctx_main.arc(this.dots[key][1] * this.multiplier, this.dots[key][0] * this.multiplier, 3, 0, 2 * math.PI, false);
       ctx_main.fillStyle = "rgb(0,255,255)";
       ctx_main.fill();
 
@@ -376,7 +383,7 @@ $(function(){
 
     var ctx_main = this.main_canvas.getContext('2d');
 
-    this.multiplier = Math.min( this.max_width / this.image.width , this.max_height / this.image.height );
+    this.multiplier = math.min( this.max_width / this.image.width , this.max_height / this.image.height );
     this.main_canvas.width =  this.image.width * this.multiplier;
     this.main_canvas.height = this.image.height * this.multiplier;
 
@@ -400,7 +407,7 @@ $(function(){
 
     ctx_main.save();
     ctx_main.beginPath();
-    ctx_main.arc(this.selected_pixel[0] * this.multiplier, this.selected_pixel[1] * this.multiplier, 2, 0, 2 * Math.PI, false);
+    ctx_main.arc(this.selected_pixel[0] * this.multiplier, this.selected_pixel[1] * this.multiplier, 2, 0, 2 * math.PI, false);
     ctx_main.fillStyle = "rgb(0,0,255)";
     ctx_main.fill();
     ctx_main.restore();
@@ -448,6 +455,8 @@ $(function(){
     }
 
     function imageLoaded(that) {
+
+      that.multiplier = 1;
 
       that.image_opacity = 100;
       that.image_is_visible = true;
@@ -548,9 +557,9 @@ $(function(){
       $('.global .param_value')[0].innerHTML = that.global_parameters['L']
       $('.global .param_value')[1].innerHTML = that.global_parameters['S']
       $('.global .param_value')[2].innerHTML = that.global_parameters['NonZero']
-      $('.global .param_value')[3].innerHTML = Math.round(that.global_parameters['lo']*10000)/10000
-      $('.global .param_value')[4].innerHTML = Math.round(that.global_parameters['B']*10000)/10000
-      $('.global .param_value')[5].innerHTML = Math.round(that.global_parameters['Si']*10000)/10000
+      $('.global .param_value')[3].innerHTML = math.round(that.global_parameters['lo'],4)
+      $('.global .param_value')[4].innerHTML = math.round(that.global_parameters['B'],4)
+      $('.global .param_value')[5].innerHTML = math.round(that.global_parameters['Si'],4)
 
       that.harmonics = respond['harmonics'];
       that.plot_params = respond['plot_params'];

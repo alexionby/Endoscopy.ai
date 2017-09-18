@@ -99,9 +99,6 @@ def skeletonize(src):
 
 def get_skeleton_map(skeleton, dist_map):
 
-    print(skeleton.shape)
-    print(dist_map.shape)
-
     return np.uint8(cv2.bitwise_and(dist_map,dist_map, mask=skeleton))
 
 
@@ -322,9 +319,6 @@ def postprocessing(img):
     print('done')
 
     print(time.time() - start)
-
-    print(result_3.shape)
-    print(result_2.shape)
 
     result_4 = get_skeleton_map(result_3, result_2)
 

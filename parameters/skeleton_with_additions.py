@@ -37,9 +37,10 @@ def zhangSuen(image):
     Image_Thinned = image.copy()  # deepcopy to protect the original image
     changing1 = changing2 = 1        #  the points to be removed (set as 0)
 
-    print('here')
-    print(image.shape, Image_Thinned)
-
+    Image_Thinned[:,-1] = 0
+    Image_Thinned[:,0] = 0
+    Image_Thinned[0,:] = 0
+    Image_Thinned[-1,:] = 0
 
     while changing1 or changing2:   #  iterates until no further changes occur in the image
 
@@ -54,7 +55,7 @@ def zhangSuen(image):
 
         for x,y in zip(nonzero[0], nonzero[1]):
             P2,P3,P4,P5,P6,P7,P8,P9 = n = neighbours(x, y, Image_Thinned)
-            if (Image_Thinned[x][y] == 1     and    # Condition 0: Point P1 in the object regions
+            if (Image_Thinned[x][y] == 1  and    # Condition 0: Point P1 in the object regions
                 2 <= sum(n) <= 6   and    # Condition 1: 2<= N(P1) <= 6
                 transitions(n) == 1 and    # Condition 2: S(P1)=1
                 P2 * P4 * P6 == 0  and    # Condition 3
@@ -517,55 +518,3 @@ def find_k_connect_points(img, connections=4):
             if cv2.countNonZero(k) >= connections and k[1,1] > 0 :
 
                 cv2.circle(points,(j,i), 0, 0, -1)
-
-
-
-    cv2.imshow('res', points)
-    cv2.waitKey(0)
-    cv2.imwrite('for_segm.jpg', points)
-
-if __name__ == "__main__":
-
-
-    img = cv2.imread('1.png',0)
-
-
-    #img = cv2.bitwise_not(img)
-    img = cv2.pyrDown(img)
-    img = cv2.pyrUp(img)
-
-    ret, img_b = cv2.threshold(img, 127,255, cv2.THRESH_BINARY)
-
-
-    img_b = img_b / 255.0
-
-
-    print(img_b.dtype)
-    print(img_b.shape)
-
-    start = time.time()
-
-    res = zhangSuen( img_b )
-    print('rdy', time.time() - start )
-
-    cv2.imwrite('res.jpg', np.uint8(res * 255))
-
-    '''
-    res = boundary_smooth(img_b)
-
-    cv2.imwrite('smooth.jpg', np.uint8(res * 255))
-    res2 =  acute_angle_emphasis(res)
-
-    cv2.imwrite('angle.jpg', np.uint8(res2 * 255))
-
-    res3 = zhangSuen( res2 )
-
-    cv2.imwrite('zhang.jpg', np.uint8(res3 * 255))
-
-    res4 = remove_staircases(res3)
-
-    cv2.imwrite('removed.jpg', np.uint8(res4 * 255))
-
-    cv2.imshow('sm',res4)
-    cv2.waitKey(0)
-    '''
