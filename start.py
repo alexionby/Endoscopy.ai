@@ -40,6 +40,81 @@ def main():
 
 from scipy.spatial import distance
 
+@app.route('/merge_new', methods=['POST'])
+def merge_new():
+
+    print(request.form['vessels'])
+    print(request.form['rads'])
+    print(request.form['params'])
+
+    vessels = Flask.json_decoder().decode(request.form['vessels'])
+    rads = Flask.json_decoder().decode(request.form['rads'])
+    params = Flask.json_decoder().decode(request.form['params'])
+
+    while len(vessels.keys()) > 1:
+
+        border_dots = np.zeros((len(vessels.keys()), 2, 2))
+
+        for key in vessels:
+
+            min_dist = np.inf
+
+            for i in [0,-1]:
+
+                point_1 = vessels[key][i]
+
+                for sec_key in vessels:
+
+                    if key != sec_key:
+
+                        for j in [0,-1]:
+
+                            point_2 = vessels[sec_key][j]
+
+                            if distance.euclidean(point_1,point_2) < min_dist:
+
+                                min_dist = distance.euclidean(point_1, point_2)
+                                closest_parts = [key,i,sec_key,j, min_dist]
+
+            print(closest_parts)
+
+            if closest_parts[1] == -1 and closest_parts[3] == -1:
+
+                vessels[key] = vessels[key] + vessels[sec_key][::-1]
+                rads[key] = rads[key] + rads[sec_key][::-1]
+
+            if closest_parts[1] == 0 and closest_parts[3] == 0:
+
+                vessels[key] = vessels[key][::-1] + vessels[sec_key]
+                rads[key] = rads[key][::-1] + rads[sec_key]
+
+            if closest_parts[1] == -1 and closest_parts[3] == 0:
+
+                vessels[key] = vessels[key] + vessels[sec_key]
+                rads[key] = rads[key] + rads[sec_key]
+
+            if closest_parts[1] == 0 and closest_parts[3] == -1:
+
+                vessels[key] = vessels[sec_key] + vessels[key]
+                rads[key] = rads[sec_key] + rads[key]
+
+            params[key] = [ float(param) for param in [ np.min(rads[key]) , np.max(rads[key]) , np.mean(rads[key]) , \
+                                                        np.std(rads[key]) , len(vessels[key]) ]]
+
+            del vessels[sec_key]
+            del rads[sec_key]
+            del params[sec_key]
+
+            break
+
+        continue
+
+    print(vessels, rads, params)
+
+    plot_params, frequency_params = eval_vessels(vessels)
+
+    return jsonify(harmonics=frequency_params[key], plot_params=plot_params[key], params=params[key], radius=rads[key], vessel=vessels[key])
+
 @app.route('/merge', methods = ['POST'])
 def merge():
 

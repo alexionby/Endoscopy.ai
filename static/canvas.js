@@ -44,6 +44,7 @@ $(function(){
     this.current_state = 'parameters';
     this.report_vessels = [];
 
+    this.before_merge = {};
   }
 
   Scene.prototype.add_to_report = function() {
@@ -126,6 +127,93 @@ $(function(){
   }
 
   //merge is here!!!!
+
+  Scene.prototype.merge_step_back = function() {
+
+    for (const vessel in this.before_merge['vessels']) {
+      this.vessels[vessel] = this.before_merge['vessels'][vessel];
+    }
+    for (const radius in this.before_merge['rads']) {
+      this.radius[radius] = this.before_merge['rads'][radius];
+    }
+    for (const parameter in this.before_merge['params']) {
+      this.vessels_parameters[parameter] = this.before_merge['params'][parameter];
+    }
+
+    this.draw_scene();
+    this.draw_plot();
+  }
+
+  Scene.prototype.new_merge_vessels = function() {
+
+    let that = this;
+
+    if (this.selected_vessels.length >= 2) {
+
+      let indexes = this.selected_vessels;
+
+      let vessels = {}
+      let rads = {}
+      let params = {}
+
+      for (const index of indexes) {
+        vessels[index] = this.vessels[index];
+        rads[index]    = this.radius[index];
+        params[index]  = this.vessels_parameters[index];
+
+        delete this.vessels[index];
+        delete this.radius[index];
+        delete this.vessels_parameters[index];
+      }
+
+      this.before_merge = {
+        'vessels' : vessels,
+        'rads' : rads,
+        'params' : params
+      };
+
+      $.ajax({
+        method: "POST",
+        url: "/merge_new",
+        dataType: 'json',
+        data: { vessels: JSON.stringify(vessels),
+                rads: JSON.stringify(rads),
+                params : JSON.stringify(params),
+              }
+      }).done(function(response){
+
+        console.log(response);
+
+        let index = math.min(indexes);
+
+        that.vessels[index] = response['vessel'];
+        that.vessels_parameters[index] = response['params'];
+        that.radius[index] = response['radius'];
+        that.harmonics[index] = response['harmonics'];
+        that.plot_params[index] = response['plot_params'];
+        that.selected_vessels = [];
+        that.current_vessel = index;
+
+        $('#param3').text(math.round(that.vessels_parameters[index][2],4));
+        $('#param4').text(math.round(that.vessels_parameters[index][3],4));
+        $('#param5').text(that.vessels_parameters[index][4]);
+        $('#param6').text(that.vessels[index].length);
+        $('#param7').text( +(that.plot_params[index]['area_under_curve']).toFixed(4) );
+        $('#param8').text( +(that.plot_params[index]['bend_count']).toFixed(4) );
+        $('#param9').text( +(that.plot_params[index]['mean_abs_peaks']).toFixed(4) );
+        $('#param10').text( +(that.plot_params[index]['std_amplitude']).toFixed(4) );
+        $('#param11').text( +(that.plot_params[index]['max_amplitude']).toFixed(4) );
+        $('#param12').text( +(that.plot_params[index]['min_amplitude']).toFixed(4) );
+
+        that.draw_scene();
+        that.draw_plot(index);
+      });
+
+
+    }
+
+  }
+
   Scene.prototype.merge_vessels = function() {
 
     if (this.selected_vessels.length === 2) {
@@ -148,7 +236,7 @@ $(function(){
       delete this.radius[index_2];
       delete this.harmonics[index_1];
       delete this.harmonics[index_2];
-      delete this.plot_params[index_1];
+      delete this.plindex_1, index_2ot_params[index_1];
       delete this.plot_params[index_2];
       delete this.vessels_parameters[index_1];
       delete this.vessels_parameters[index_2];
@@ -286,7 +374,7 @@ $(function(){
             that.selected_vessels.push(vessel);
           }
 
-          if (that.selected_vessels.length > 2) {
+          if (that.selected_vessels.length > 5) {
             that.selected_vessels.shift();
           }
         }
@@ -295,7 +383,7 @@ $(function(){
 
         if (that.current_vessel !== vessel) {
 
-          that.current_vessel = vessel
+          that.current_vessel = vessel;
 
           $('#param3').text(that.vessels_parameters[vessel][2]);
           $('#param4').text(that.vessels_parameters[vessel][3]);
@@ -773,8 +861,8 @@ $(function(){
   $("input[type=range]").change( function(){ scene.set_opacity(this); } );
   $("#segment-image").click( function(){ scene.segment_image(); });
   $("select#model").change( function(){ scene.model = this.value; });
-  $("#merge_btn").click(function(){ scene.merge_vessels(); });
-  $("#clear_list_btn").click(function(){ scene.clear_selected_vessels(); });
+  $("#merge_btn").click(function(){ scene.new_merge_vessels() });
+  $("#clear_list_btn").click(function(){ scene.merge_step_back(); });
   $("#add_to_report_btn").click(function(){ scene.add_to_report(this); });
   $("#save-image-btn").click( function(){
     var dataURL = $("#main-canvas")[0].toDataURL('image/png');
