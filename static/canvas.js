@@ -144,7 +144,7 @@ $(function(){
     this.draw_plot();
   }
 
-  Scene.prototype.new_merge_vessels = function() {
+  Scene.prototype.merge_vessels = function() {
 
     let that = this;
 
@@ -174,7 +174,7 @@ $(function(){
 
       $.ajax({
         method: "POST",
-        url: "/merge_new",
+        url: "/merge",
         dataType: 'json',
         data: { vessels: JSON.stringify(vessels),
                 rads: JSON.stringify(rads),
@@ -209,81 +209,6 @@ $(function(){
         that.draw_plot(index);
       });
 
-
-    }
-
-  }
-
-  Scene.prototype.merge_vessels = function() {
-
-    if (this.selected_vessels.length === 2) {
-
-      let index_1 = this.selected_vessels[0];
-      let index_2 = this.selected_vessels[1];
-
-      let vess_a = this.vessels[index_1];
-      let vess_b = this.vessels[index_2];
-
-      let rad_a = this.radius[index_1];
-      let rad_b = this.radius[index_2];
-
-      let params_a = this.vessels_parameters[index_1];
-      let params_b = this.vessels_parameters[index_2];
-
-      delete this.vessels[index_1];
-      delete this.vessels[index_2];
-      delete this.radius[index_1];
-      delete this.radius[index_2];
-      delete this.harmonics[index_1];
-      delete this.harmonics[index_2];
-      delete this.plindex_1, index_2ot_params[index_1];
-      delete this.plot_params[index_2];
-      delete this.vessels_parameters[index_1];
-      delete this.vessels_parameters[index_2];
-
-      let that = this;
-
-      $.ajax({
-        method: "POST",
-        url: "/merge",
-        data: { vess_a: JSON.stringify(vess_a),
-                vess_b: JSON.stringify(vess_b),
-                index: math.min(index_1, index_2),
-                rad_a: JSON.stringify(rad_a),
-                rad_b: JSON.stringify(rad_b),
-                params_a : JSON.stringify(params_a),
-                params_b : JSON.stringify(params_b),
-              }
-      })
-        .done(function( response ) {
-
-          var index = response['index']
-
-          that.vessels[index] = response['vessel'][index];
-          that.vessels_parameters[index] = response['params'][index];
-          that.radius[index] = response['radius'][index];
-          that.harmonics[index] = response['harmonics'][index];
-          that.plot_params[index] = response['plot_params'][index];
-          that.selected_vessels = [];
-
-          var vessel = index;
-          that.current_vessel = vessel;
-
-          $('#param3').text(that.vessels_parameters[vessel][2]);
-          $('#param4').text(that.vessels_parameters[vessel][3]);
-          $('#param5').text(that.vessels_parameters[vessel][4]);
-          $('#param6').text(that.vessels[vessel].length);
-          $('#param7').text( +(that.plot_params[vessel]['area_under_curve']).toFixed(4) );
-          $('#param8').text( +(that.plot_params[vessel]['bend_count']).toFixed(4) );
-          $('#param9').text( +(that.plot_params[vessel]['mean_abs_peaks']).toFixed(4) );
-          $('#param10').text( +(that.plot_params[vessel]['std_amplitude']).toFixed(4) );
-          $('#param11').text( +(that.plot_params[vessel]['max_amplitude']).toFixed(4) );
-          $('#param12').text( +(that.plot_params[vessel]['min_amplitude']).toFixed(4) );
-
-          that.draw_scene();
-          that.draw_plot(vessel);
-
-        });
 
     }
 
@@ -372,10 +297,6 @@ $(function(){
             that.selected_vessels.splice(that.selected_vessels.indexOf(vessel), 1);
           } else {
             that.selected_vessels.push(vessel);
-          }
-
-          if (that.selected_vessels.length > 5) {
-            that.selected_vessels.shift();
           }
         }
 
@@ -861,7 +782,7 @@ $(function(){
   $("input[type=range]").change( function(){ scene.set_opacity(this); } );
   $("#segment-image").click( function(){ scene.segment_image(); });
   $("select#model").change( function(){ scene.model = this.value; });
-  $("#merge_btn").click(function(){ scene.new_merge_vessels() });
+  $("#merge_btn").click(function(){ scene.merge_vessels() });
   $("#clear_list_btn").click(function(){ scene.merge_step_back(); });
   $("#add_to_report_btn").click(function(){ scene.add_to_report(this); });
   $("#save-image-btn").click( function(){
