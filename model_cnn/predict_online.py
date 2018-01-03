@@ -5,7 +5,7 @@ import cv2
 import keras
 from keras.models import Model
 
-from model_retina.train import get_unet
+from model_cnn.train import get_unet
 
 image_rows = 192
 image_cols = image_rows

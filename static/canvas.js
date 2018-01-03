@@ -7,6 +7,10 @@ $(function(){
 
     this.global_parameters = undefined;
 
+    this.segm = undefined;
+    this.segm_opacity = 100;
+    this.segm_is_visible = true;
+
     this.image = undefined;
     this.image_opacity = 100;
     this.image_is_visible = true;
@@ -383,6 +387,20 @@ $(function(){
 
   }
 
+  Scene.prototype.draw_segm_image = function() {
+
+    var ctx_real = this.real_canvas.getContext('2d');
+    ctx_real.drawImage(this.segm, 0, 0, this.real_canvas.width, this.real_canvas.height);
+
+    var ctx_main = this.main_canvas.getContext('2d');
+
+    ctx_main.save();
+    ctx_main.globalAlpha = this.segm_opacity / 100 * this.segm_is_visible
+    ctx_main.drawImage(this.segm, 0, 0, this.main_canvas.width, this.main_canvas.height);
+    ctx_main.restore();
+
+  }
+
   Scene.prototype.draw_scene = function() {
 
     var ctx_real = this.real_canvas.getContext('2d');
@@ -396,6 +414,9 @@ $(function(){
     this.main_canvas.width =  this.image.width * this.multiplier;
     this.main_canvas.height = this.image.height * this.multiplier;
 
+    if(typeof this.segm !== 'undefined'  && this.segm_is_visible !== false) {
+      this.draw_segm_image();
+    }
     if(typeof this.image !== 'undefined'  && this.image_is_visible !== false) {
       this.draw_image();
     }
@@ -436,6 +457,8 @@ $(function(){
   }
 
   Scene.prototype.open_image = function(element) {
+
+    $('#open-image-btn').html($('#open-image')[0].files[0].name);
 
     if ( $("#model").val() === "0") {
       $(".menu-buttons li:nth-child(1)").css("animation","");
@@ -550,6 +573,7 @@ $(function(){
        contentType: false,
     }).done(function(respond){
 
+      that.segm = new Image();
       that.image = new Image();
       var image_ready = function() {
 
@@ -557,6 +581,7 @@ $(function(){
         that.select_object();
 
       }
+
 
       that.vessels = respond['vessels'];
       that.vessels_parameters = respond['parameters'];
@@ -576,8 +601,12 @@ $(function(){
       that.dots = respond['dots'];
       $('.dots .param_value')[0].innerHTML = Object.keys(that.dots).length
 
+      that.segm.src = respond['path_segm'];
+
       that.image.onload = image_ready;
       that.image.src = respond['path'];
+
+
 
       $('#segment-image').prop('disabled', false);
       $("#segment-image").text("Processing");
@@ -627,11 +656,12 @@ $(function(){
     result += lineDelimiter;
 
     for (const key of keys) {
-      result += scene.global_parameters[key];
+      result += String(scene.global_parameters[key]).replace('.',',');
       result += columnDelimiter;
     }
 
     csv = result.slice(0,-1) + lineDelimiter;
+    //csv = csv.replace(/./g, ',');
 
     element = $("#save_report_global_ref");
 
@@ -647,7 +677,7 @@ $(function(){
       "download": filename });
   });
 
-  $('#save_report_csv_ref').click( function(that=this) {
+  $('#save_report_csv_ref').click( function() {
 
     var data = []
     var temp_link, filename, csv;
@@ -658,22 +688,34 @@ $(function(){
       index_and_params = [key].concat(scene.vessels_parameters[key]);
       index_and_params = index_and_params.concat(scene.harmonics[key][0]);
       index_and_params = index_and_params.concat(scene.harmonics[key][1]);
+      index_and_params = index_and_params.concat(scene.plot_params[key]);
 
-      data.push(index_and_params.concat(scene.plot_params[key]))
+      data.push(index_and_params);
     }
 
     var columnDelimiter = ';';
     var lineDelimiter = '\n';
 
-    var header = ['Номер','Мин. радиус', 'Макс. радиус', 'Ср. радиус','СКО радиуса','Площадь']
+    var header = ['Id','Min. radius', 'Max. radius', 'Avr. radius','Std radius', 'Area']
       .concat(["x0","x1","x2","x3","x4","x5","x6","x7","x8","x9"])
       .concat([0,1,2,3,4,5,6,7,8,9])
-      .concat(['Площадь под кривой','Количество перегибов','Макс. амплитуда',
-               'Средняя амплитуда пиков', 'Средняя амплитуда', 'Мин. амплитуда', 'Дисперсия амплитуды', 'Дисперсия пиков']);
+      .concat(['Area Under Curve','Bend Count','Max. amplitude',
+               'Mean peaks amplitude', 'Avr amplitude', 'Min. amplitude', 'Std. amplitude', 'Std peaks']);
+
+    /*
+    var header = ['Id','Min. radius', 'Max. radius', 'Avr. radius','Std radius', 'Area']
+       .concat(["x0","x1","x2","x3","x4","x5","x6","x7","x8","x9"])
+       .concat([0,1,2,3,4,5,6,7,8,9])
+       .concat(['Площадь под кривой','Количество перегибов','Макс. амплитуда',
+                'Средняя амплитуда пиков', 'Средняя амплитуда', 'Мин. амплитуда', 'Дисперсия амплитуды', 'Дисперсия пиков']);
+    */
 
     var keys = []
     keys = keys.concat(Object.keys(index_and_params)); //.concat( Object.keys(scene.plot_params) ) ;
     keys = keys.concat(Object.keys(scene.plot_params[0]));
+
+    console.log(keys);
+    console.log(index_and_params);
 
     var result = '';
     result += header.join(columnDelimiter);
@@ -684,9 +726,18 @@ $(function(){
         var ctr = 0;
         keys.forEach(function( key ) {
 
-            if (ctr > 0) result += columnDelimiter;
+            if (key === "26") {
+              return 0
+            }
 
-            result += item[key] || item[ item.length - 1 ][key];
+            if (ctr > 0) { result += columnDelimiter;}
+
+            if (key === "6") {
+              result += 0
+            } else {
+              result += String(item[key] || item[ item.length - 1 ][key]).replace('.',',');
+            }
+
             ctr++;
         });
         result += lineDelimiter;
@@ -695,6 +746,7 @@ $(function(){
     filename = $("#save_report_csv_ref").prev().val() + '.csv' ;
 
     csv = result;
+    //csv = result.replace(/./g, ',');
 
     if (!csv.match(/^data:text\/csv/i)) {
       csv = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURI(csv);
@@ -706,10 +758,9 @@ $(function(){
     temp_link.setAttribute('download', filename);
   });
 
-  $('#save_report_img_ref').click( function(that=this) {
-    var dataURL = $("#main-canvas")[0].toDataURL('image/png');
-    this.href = dataURL;
-    this.download = $('#save_report_img_ref').prev().val();
+  $('#save_report_img_ref').click( function(e) {
+
+    $(this).attr({'href': $("#main-canvas")[0].toDataURL('image/png') , 'download': $(this).prev().val() + '.png'});
   });
 
   $('#modeTab a#parameters-tab').click(function (e) {
@@ -776,6 +827,57 @@ $(function(){
       });
     }
   });
+
+
+  var left_mouse_down = false;
+
+  $('*').mousedown( function() {
+    left_mouse_down = true;
+  })
+
+  $('*').mouseup( function() {
+    left_mouse_down = false;
+  })
+
+  $("progress").mousemove( function(event){
+
+    if (left_mouse_down === true) {
+
+      let elem = $(this);
+      let bounds = elem[0].getBoundingClientRect();
+
+      elem.val( math.round((event.pageX - bounds['x']) / bounds['width'] * 100));
+
+      if ( elem.val() >= 98 | elem.val() <= 3) {
+
+        scene[elem.attr('id').replace('-','_')] = elem.val();
+        scene.draw_scene();
+      }
+    }
+  });
+
+  $("progress").mousedown( function(event){
+    if (left_mouse_down === true) {
+      let elem = $(this);
+      let bounds = elem[0].getBoundingClientRect();
+      elem.val( (event.pageX - bounds['x']) / bounds['width'] * 100);
+    }
+  });
+
+  $(".menu-layer progress").mouseup( function(event){
+    let elem = $(this);
+    scene[elem.attr('id').replace('-','_')] = elem.val();
+    scene.draw_scene();
+  });
+
+  $(".menu-layer span").css("pointer-events", "none");
+
+  $("#open-image-btn").click(function(){
+    console.log('open')
+    $("#open-image").click();
+    console.log($('input[type="file"]').val())
+  });
+
 
   $("#open-image").change( function(){ scene.open_image(this); });
   $(":checkbox").change( function(){ scene.set_visibility(this); } );

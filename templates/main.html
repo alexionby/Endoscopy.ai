@@ -8,6 +8,7 @@
 
         <ul class="menu-buttons">
           <li>
+            <button id='open-image-btn'>Открыть файл</button>
             <input id="open-image" type="file" name="img" class="btn btn-outline-secondary" accept="image/jpeg,image/png,image/gif">
           </li>
           <li>
@@ -30,29 +31,39 @@
         <ul class="menu-layers">
           <li>
             <div class="menu-layer">
-              <p>
-                Оригинал
-              </p>
+
+              <input id="segm-visibility" type="checkbox" checked>
+              <progress id="segm-opacity" max="100" value="100"></progress>
+              <span>Сегментация</span>
+
+
+            </div>
+          </li>
+          <li>
+            <div class="menu-layer">
+
               <input id="image-visibility" type="checkbox" checked>
-              <input id="image-opacity" type="range" min="0" max="100" step="1" value="50">
+              <progress id="image-opacity" max="100" value="100"></progress>
+              <span>Оригинал</span>
+
             </div>
           </li>
           <li>
             <div class="menu-layer">
-              <p>
-                Сосуды
-              </p>
+
               <input id="vessels-visibility" type="checkbox" checked>
-              <input id="vessels-opacity" type="range" min="0" max="100" step="1" value="50">
+              <progress id="vessels-opacity" max="100" value="100"></progress>
+              <span>Сосуды</span>
+
             </div>
           </li>
           <li>
             <div class="menu-layer">
-              <p>
-                Точки ветвления
-              </p>
+
               <input id="dots-visibility" type="checkbox" checked>
-              <input id="dots-opacity" type="range" min="0" max="100" step="1" value="50">
+              <progress id="dots-opacity" max="100" value="100"></progress>
+              <span>Точки ветвления</span>
+
             </div>
           </li>
         </ul>

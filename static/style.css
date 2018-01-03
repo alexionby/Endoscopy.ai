@@ -1,3 +1,36 @@
+#open-image-btn {
+  background-color: orange;
+  box-sizing: border-box;
+  border: 1px solid black;
+  border-radius: none;
+  height: 35px;
+}
+
+progress {
+  position: relative;
+  border: 1px solid black;
+  border-radius: none;
+  width: 200px;
+}
+
+progress::-moz-progress-bar {
+  background-color: orange;
+}
+
+progress::-webkit-progress-bar {
+  background-color: orange;
+}
+
+
+progress + span {
+  position: absolute;
+  font-size: 12px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding-left: 18px;
+}
+
 .menu {
   background-color: azure;
 }
@@ -82,6 +115,7 @@
 
 #open-image {
   padding: 0;
+  display: none;
 }
 
 table {
@@ -159,4 +193,50 @@ div#parameters > div {
 .tab-content {
   overflow: auto;
   height: calc(100vh - 50px);
+}
+
+#modeTab {
+  height: 35px;
+}
+
+#modeTab a {
+  border: none ;
+  border-radius: 0;
+  padding: 5px 15px;
+  box-sizing: border-box;
+}
+
+#save-image-btn {
+  display: block;
+  height: 35px;
+  padding: 5px 15px;
+  background-color: lightsalmon;
+}
+
+.menu-layer {
+  position: relative;
+  box-sizing: border-box;
+  padding: 8px;
+}
+
+.menu-layer .test-range {
+  position: absolute;
+  right: 0;
+  width: 90%;
+
+  background-color: red;
+}
+
+.menu-layer .test-check {
+  position: absolute;
+  left: 0;
+  width: 10%;
+  background-color: green;
+}
+
+.menu-layer .test-range-text {
+  position: absolute;
+  right: 0;
+  width: 80%;
+
 }

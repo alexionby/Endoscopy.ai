@@ -11,7 +11,7 @@ import time
 
 import json
 
-from model_retina.predict_online import make_prediction
+from model_cnn.predict_online import make_prediction
 from parameters.eval_parameters import postprocessing, eval_vessels
 
 from scipy.spatial import distance
@@ -25,11 +25,6 @@ app.secret_key = 'well_known_secret'
 @app.route('/')
 def index():
     return render_template('index.html')
-
-"""@app.route('/static/<path:filename>')
-def download_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'],
-                               filename, as_attachment=True)"""
 
 @app.route('/main')
 def main():
@@ -138,11 +133,13 @@ def segmentation():
 
     print('response sended')
 
-    return jsonify( path=url_for('static', filename='images/' + filename + '.png'), vessels=vess_dict, dots=dots_dict, \
+    return jsonify( path=url_for('static', filename='images/' + filename + '.png'), \
+                    path_segm=url_for('static', filename='images/' + filename + '_1.png'), \
+                    vessels=vess_dict, dots=dots_dict, \
                     parameters=params_dict, radius=radius_dict, \
                     global_params=global_params, \
                     harmonics=frequency_params, plot_params=plot_params)
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=5000, debug=True)
