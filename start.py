@@ -84,7 +84,7 @@ def merge():
                 rads[key] = rads[sec_key] + rads[key]
 
             params[key] = [ float(param) for param in [ np.min(rads[key]) , np.max(rads[key]) , np.mean(rads[key]) , \
-                                                        np.std(rads[key]) , len(vessels[key]) ]]
+                                                        np.std(rads[key]) , params[key][4] + params[sec_key][4] ]]
 
             del vessels[sec_key]
             del rads[sec_key]

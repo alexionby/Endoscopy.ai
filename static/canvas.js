@@ -192,6 +192,9 @@ $(function(){
 
         that.vessels[index] = response['vessel'];
         that.vessels_parameters[index] = response['params'];
+
+        that.vessels_parameters[index].push(that.vessels[index].length);
+
         that.radius[index] = response['radius'];
         that.harmonics[index] = response['harmonics'];
         that.plot_params[index] = response['plot_params'];
@@ -201,7 +204,7 @@ $(function(){
         $('#param3').text(math.round(that.vessels_parameters[index][2],4));
         $('#param4').text(math.round(that.vessels_parameters[index][3],4));
         $('#param5').text(that.vessels_parameters[index][4]);
-        $('#param6').text(that.vessels[index].length);
+        $('#param6').text(that.vessels_parameters[index][5]);
         $('#param7').text( +(that.plot_params[index]['area_under_curve']).toFixed(4) );
         $('#param8').text( +(that.plot_params[index]['bend_count']).toFixed(4) );
         $('#param9').text( +(that.plot_params[index]['mean_abs_peaks']).toFixed(4) );
@@ -310,10 +313,10 @@ $(function(){
 
           that.current_vessel = vessel;
 
-          $('#param3').text(that.vessels_parameters[vessel][2]);
-          $('#param4').text(that.vessels_parameters[vessel][3]);
+          $('#param3').text(math.round(that.vessels_parameters[vessel][2],4));
+          $('#param4').text(math.round(that.vessels_parameters[vessel][3],4));
           $('#param5').text(that.vessels_parameters[vessel][4]);
-          $('#param6').text(that.vessels[vessel].length);
+          $('#param6').text(that.vessels_parameters[vessel][5]);
           $('#param7').text( +(that.plot_params[vessel]['area_under_curve']).toFixed(4) );
           $('#param8').text( +(that.plot_params[vessel]['bend_count']).toFixed(4) );
           $('#param9').text( +(that.plot_params[vessel]['mean_abs_peaks']).toFixed(4) );
@@ -582,9 +585,16 @@ $(function(){
 
       }
 
-
       that.vessels = respond['vessels'];
       that.vessels_parameters = respond['parameters'];
+
+      for ( key in that.vessels ) {
+          that.vessels_parameters[key].push(that.vessels[key].length);
+      }
+
+      console.log(respond['parameters']);
+      console.log(respond['vessels']);
+
       that.radius = respond['radius'];
 
       that.global_parameters = respond['global_params']
@@ -696,7 +706,7 @@ $(function(){
     var columnDelimiter = ';';
     var lineDelimiter = '\n';
 
-    var header = ['Id','Min. radius', 'Max. radius', 'Avr. radius','Std radius', 'Area']
+    var header = ['Id','Min. radius', 'Max. radius', 'Avr. radius','Std radius', 'Area', 'Length']
       .concat(["x0","x1","x2","x3","x4","x5","x6","x7","x8","x9"])
       .concat([0,1,2,3,4,5,6,7,8,9])
       .concat(['Area Under Curve','Bend Count','Max. amplitude',
@@ -726,13 +736,13 @@ $(function(){
         var ctr = 0;
         keys.forEach(function( key ) {
 
-            if (key === "26") {
+            if (key === "27") {
               return 0
             }
 
             if (ctr > 0) { result += columnDelimiter;}
 
-            if (key === "6") {
+            if (key === "7") {
               result += 0
             } else {
               result += String(item[key] || item[ item.length - 1 ][key]).replace('.',',');

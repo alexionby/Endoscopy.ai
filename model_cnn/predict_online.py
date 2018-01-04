@@ -52,7 +52,7 @@ def make_prediction(image_name=None, img=None, weights='DRIVE.h5'):
     print(data.shape)
 
     model = get_unet(image_rows, image_cols)
-    model.load_weights('model_retina/' + weights)
+    model.load_weights('model_cnn/' + weights)
 
     result = model.predict(data,batch_size=batch_size,verbose=1)
 
