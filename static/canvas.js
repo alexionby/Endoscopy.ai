@@ -653,6 +653,9 @@ $(function(){
     scene.current_state = 'parameters';
   });
 
+
+  // EXPORT
+
   $('#save_report_global_ref').click( function(that=this) {
 
     var filename, csv, element;
@@ -789,11 +792,13 @@ $(function(){
     scene.draw_scene();
   });
 
+  // ERASE DOTS DELETE LIST
   $("#erase-dots-btn").click( function(){
     scene.selected_dots = [];
     scene.draw_scene();
   });
 
+  // DELETE DOTS
   $("#del-dots-btn").click( function(){
 
     for ( const key of scene.selected_dots ) {
@@ -802,6 +807,8 @@ $(function(){
 
     $('.dots td.param_value').text(Object.keys(scene.dots).length);
     $('.dots td:last').text(0);
+
+    scene.global_parameters['N'] = Object.keys(scene.dots).length;
 
     scene.global_parameters['B'] = math.divide( Object.keys(scene.dots).length , scene.global_parameters['L'])
     $('.global .param_value')[4].innerHTML = math.round( scene.global_parameters['B'], 4)

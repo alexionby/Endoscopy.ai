@@ -95,6 +95,7 @@ def merge():
         continue
 
     plot_params, frequency_params = eval_vessels(vessels)
+    
     return jsonify(harmonics=frequency_params[key], plot_params=plot_params[key], \
                    params=params[key], radius=rads[key], vessel=vessels[key])
 
