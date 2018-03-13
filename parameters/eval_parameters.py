@@ -67,38 +67,17 @@ def create_map(src, step=10):
 def skeletonize(src):
 
     img = np.copy(src)
-    img_shape = img.shape[::-1]
-
-    print(1)
-
-    img = cv2.pyrDown(img)
-    img = cv2.pyrUp(img)
-
-    print(2)
-
-    img = cv2.resize(img,img_shape, interpolation = cv2.INTER_CUBIC)
-
-    print(3)
 
     ret, img_b = cv2.threshold(img, 127,255, cv2.THRESH_BINARY)
-    img_b = img_b / 255.0
-    print('*' * 30)
-
-    #img_b = boundary_smooth(img_b)
-    #print('*' * 30)
-
+    img_b = img_b / 255.
     img_b = zhangSuen(img_b)
-    print('*' * 30)
-
     img_b = remove_staircases(img_b)
-    print('*' * 30)
 
     global_params['L'] = cv2.countNonZero(img_b)
 
     return np.uint8(img_b * 255)
 
 def get_skeleton_map(skeleton, dist_map):
-
     return np.uint8(cv2.bitwise_and(dist_map,dist_map, mask=skeleton))
 
 
@@ -165,7 +144,7 @@ def extract_vessels(skeleton, binary_image, filename='vessels.json', step=10):
                     branch_count += 1
 
                 if k < i or (k == i and n < j):
-                    i,j = k,n
+                    i,j = 0,0
 
                 if len(points) > 5:
 
@@ -220,18 +199,21 @@ import scipy
 from scipy.signal import savgol_filter
 from scipy.signal import argrelextrema
 
+def eval_vessel(vessel):
+
+    arr = rotate(vessel)
+    params,yhat = get_params(arr)
+    harmonics = get_harmony(arr)
+    
+    return params, harmonics
+
 def eval_vessels(vessels):
 
     params_dict = {}
     harmonics_dict = {}
 
     for k in vessels:
-        #print('Сосуд номер: ', k)
-        arr = rotate(vessels[k])
-        params, yhat = get_params(arr, index = k)
-
-        harmonics = get_harmony(arr) #[:,:10]
-
+        params, harmonics = eval_vessel(vessels[k])
         params_dict[k] = params
         harmonics_dict[k] = harmonics
 
@@ -277,7 +259,7 @@ def get_harmony(arr):
     return [x_real, y_real]
 
 
-def get_params(arr, index=0):
+def get_params(arr):
 
     yhat = savgol_filter(arr[1], 21, 3, mode='nearest')
 

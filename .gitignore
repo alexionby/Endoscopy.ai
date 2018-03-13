@@ -105,4 +105,7 @@ venv.bak/
 /static/images/*.png
 *.jpg
 *.json
+*.png
+*.ipynb
+
 static/.tern-project

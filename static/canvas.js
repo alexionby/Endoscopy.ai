@@ -134,18 +134,35 @@ $(function(){
 
   Scene.prototype.merge_step_back = function() {
 
-    for (const vessel in this.before_merge['vessels']) {
-      this.vessels[vessel] = this.before_merge['vessels'][vessel];
+    for (const attr of ['vessels','radius','vessels_parameters','harmonics','plot_params']) {
+      console.log(attr);
+      for (const i in this.before_merge[attr]) {
+        
+        this[attr][i] = this.before_merge[attr][i]
+        console.log(attr, i, this[attr], this[attr][i])
+      }
     }
-    for (const radius in this.before_merge['rads']) {
-      this.radius[radius] = this.before_merge['rads'][radius];
+    /*
+    for (const i in this.before_merge['vessels']) {
+      this.vessels[i] = this.before_merge['vessels'][i];
     }
-    for (const parameter in this.before_merge['params']) {
-      this.vessels_parameters[parameter] = this.before_merge['params'][parameter];
+    for (const i in this.before_merge['rads']) {
+      this.radius[i] = this.before_merge['rads'][i];
     }
+    for (const i in this.before_merge['params']) {
+      this.vessels_parameters[i] = this.before_merge['params'][i];
+    }
+    for (const i in this.before_merge['harmonics']) {
+      this.harmonics[i] = this.before_merge['harmonics'][i];
+    }
+    for (const i in this.before_merge['plot_params']) {
+      this.plot_params[i] = this.before_merge['plot_params'][i];
+    }*/
 
     this.draw_scene();
-    this.draw_plot();
+    for (const vessel in this.before_merge['vessels']) {
+      this.draw_plot(vessel);
+    }
   }
 
   Scene.prototype.merge_vessels = function() {
@@ -157,23 +174,31 @@ $(function(){
       let indexes = this.selected_vessels;
 
       let vessels = {}
-      let rads = {}
-      let params = {}
+      let radius = {}
+      let vessels_parameters = {}
+      let harmonics = {}
+      let plot_params = {}
 
       for (const index of indexes) {
         vessels[index] = this.vessels[index];
-        rads[index]    = this.radius[index];
-        params[index]  = this.vessels_parameters[index];
+        radius[index]    = this.radius[index];
+        vessels_parameters[index]  = this.vessels_parameters[index];
+        harmonics[index] = this.harmonics[index];
+        plot_params[index] = this.plot_params[index];
 
         delete this.vessels[index];
         delete this.radius[index];
         delete this.vessels_parameters[index];
+        delete this.harmonics[index];
+        delete this.plot_params[index];
       }
 
       this.before_merge = {
         'vessels' : vessels,
-        'rads' : rads,
-        'params' : params
+        'radius' : radius,
+        'vessels_parameters' : vessels_parameters,
+        'harmonics' : harmonics,
+        'plot_params' : plot_params
       };
 
       $.ajax({
@@ -181,14 +206,15 @@ $(function(){
         url: "/merge",
         dataType: 'json',
         data: { vessels: JSON.stringify(vessels),
-                rads: JSON.stringify(rads),
-                params : JSON.stringify(params),
+                rads: JSON.stringify(radius),
+                params : JSON.stringify(vessels_parameters),
               }
       }).done(function(response){
 
         console.log(response);
+        console.log(indexes);
 
-        let index = math.min(indexes);
+        let index = math.min(indexes.map(Number));
 
         that.vessels[index] = response['vessel'];
         that.vessels_parameters[index] = response['params'];
@@ -902,7 +928,7 @@ $(function(){
   $("#segment-image").click( function(){ scene.segment_image(); });
   $("select#model").change( function(){ scene.model = this.value; });
   $("#merge_btn").click(function(){ scene.merge_vessels() });
-  $("#clear_list_btn").click(function(){ scene.merge_step_back(); });
+  $("#merge_step_back_btn").click(function(){ scene.merge_step_back(); });
   $("#add_to_report_btn").click(function(){ scene.add_to_report(this); });
   $("#save-image-btn").click( function(){
     var dataURL = $("#main-canvas")[0].toDataURL('image/png');

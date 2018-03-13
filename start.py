@@ -12,7 +12,7 @@ import time
 import json
 
 from model_cnn.predict_online import make_prediction
-from parameters.eval_parameters import postprocessing, eval_vessels
+from parameters.eval_parameters import postprocessing, eval_vessels, eval_vessel
 
 from scipy.spatial import distance
 
@@ -47,6 +47,8 @@ def merge():
         border_dots = np.zeros((len(vessels.keys()), 2, 2))
 
         for key in vessels:
+
+            print(key, len(vessels[key]))
 
             min_dist = np.inf
 
@@ -83,6 +85,8 @@ def merge():
                 vessels[key] = vessels[sec_key] + vessels[key]
                 rads[key] = rads[sec_key] + rads[key]
 
+            print(key, len(vessels[key]))
+
             params[key] = [ float(param) for param in [ np.min(rads[key]) , np.max(rads[key]) , np.mean(rads[key]) , \
                                                         np.std(rads[key]) , params[key][4] + params[sec_key][4] ]]
 
@@ -94,9 +98,10 @@ def merge():
 
         continue
 
-    plot_params, frequency_params = eval_vessels(vessels)
+    print(key, len(vessels[key]))
+    plot_params, frequency_params = eval_vessel(vessels[key])
     
-    return jsonify(harmonics=frequency_params[key], plot_params=plot_params[key], \
+    return jsonify(harmonics=frequency_params, plot_params=plot_params, \
                    params=params[key], radius=rads[key], vessel=vessels[key])
 
 

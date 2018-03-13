@@ -1,4 +1,6 @@
 import cv2
+from skimage.morphology import skeletonize
+
 import numpy as np
 
 from numba import jit, void
@@ -33,58 +35,7 @@ def transitions(neighbours):
 """
 
 def zhangSuen(image):
-    "the Zhang-Suen Thinning Algorithm"
-    Image_Thinned = image.copy()  # deepcopy to protect the original image
-    changing1 = changing2 = 1        #  the points to be removed (set as 0)
-
-    Image_Thinned[:,-1] = 0
-    Image_Thinned[:,0] = 0
-    Image_Thinned[0,:] = 0
-    Image_Thinned[-1,:] = 0
-
-    while changing1 or changing2:   #  iterates until no further changes occur in the image
-
-        start = time.time()
-
-        # Step 1
-        changing1 = []
-        rows, columns = Image_Thinned.shape               # x for rows, y for columns
-        #for x in range(1, rows - 1):                     # No. of  rows
-        #    for y in range(1, columns - 1):            # No. of columns
-        nonzero = np.nonzero(Image_Thinned)
-
-        for x,y in zip(nonzero[0], nonzero[1]):
-            P2,P3,P4,P5,P6,P7,P8,P9 = n = neighbours(x, y, Image_Thinned)
-            if (Image_Thinned[x][y] == 1  and    # Condition 0: Point P1 in the object regions
-                2 <= sum(n) <= 6   and    # Condition 1: 2<= N(P1) <= 6
-                transitions(n) == 1 and    # Condition 2: S(P1)=1
-                P2 * P4 * P6 == 0  and    # Condition 3
-                P4 * P6 * P8 == 0):         # Condition 4
-                changing1.append((x,y))
-
-        for x, y in changing1:
-            Image_Thinned[x][y] = 0
-
-        # Step 2
-        changing2 = []
-        #for x in range(1, rows - 1):
-        #    for y in range(1, columns - 1):
-        for x,y in zip(nonzero[0], nonzero[1]):
-            P2,P3,P4,P5,P6,P7,P8,P9 = n = neighbours(x, y, Image_Thinned)
-            if (Image_Thinned[x][y] == 1   and        # Condition 0
-                2 <= sum(n) <= 6  and       # Condition 1
-                transitions(n) == 1 and      # Condition 2
-                P2 * P4 * P8 == 0 and       # Condition 3
-                P2 * P6 * P8 == 0):            # Condition 4
-                changing2.append((x,y))
-
-        for x, y in changing2:
-            Image_Thinned[x][y] = 0
-
-        print('iteration', time.time() - start )
-        cv2.imwrite('test.jpg', np.uint8(Image_Thinned * 255) )
-
-    return Image_Thinned
+    return np.uint8(skeletonize(image))
 
 def yokoi_connectivity(img, point):
 
@@ -108,7 +59,7 @@ def yokoi_connectivity(img, point):
         n1 = (n + 1) % 8
         n2 = (n + 2) % 8
 
-        ret += N[n] - N[n] * N[n1] * N[n2]
+        ret += np.subtract(N[n],N[n] * N[n1] * N[n2], dtype=np.uint8)
 
     return ret
 
