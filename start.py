@@ -42,13 +42,19 @@ def merge():
     rads = Flask.json_decoder().decode(request.form['rads'])
     params = Flask.json_decoder().decode(request.form['params'])
 
+    #print(vessels)
+    print(vessels.keys())
+
     while len(vessels.keys()) > 1:
 
-        border_dots = np.zeros((len(vessels.keys()), 2, 2))
+        print(vessels.keys())
+        keys = list(map(str, sorted(map(int, vessels.keys()))))
 
-        for key in vessels:
+        for key in keys:
+        
+            print(key)
 
-            print(key, len(vessels[key]))
+            #print(key, len(vessels[key]))
 
             min_dist = np.inf
 
@@ -68,6 +74,9 @@ def merge():
 
                                 min_dist = distance.euclidean(point_1, point_2)
                                 closest_parts = [key,i,sec_key,j, min_dist]
+            
+            key = closest_parts[0]
+            sec_key = closest_parts[2]
 
             if closest_parts[1] == -1 and closest_parts[3] == -1:
                 vessels[key] = vessels[key] + vessels[sec_key][::-1]
@@ -99,7 +108,9 @@ def merge():
         continue
 
     print(key, len(vessels[key]))
-    plot_params, frequency_params = eval_vessel(vessels[key])
+
+    plot_params, frequency_params = eval_vessel(vessels[key], key)
+    print(key, len(vessels[key]))
     
     return jsonify(harmonics=frequency_params, plot_params=plot_params, \
                    params=params[key], radius=rads[key], vessel=vessels[key])

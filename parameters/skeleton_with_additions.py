@@ -35,6 +35,12 @@ def transitions(neighbours):
 """
 
 def zhangSuen(image):
+
+    image[0, :] = 0
+    image[-1, :] = 0
+    image[:, 0] = 0
+    image[:, -1] = 0
+
     return np.uint8(skeletonize(image))
 
 def yokoi_connectivity(img, point):

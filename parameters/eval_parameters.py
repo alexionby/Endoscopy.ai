@@ -7,7 +7,37 @@ from flask import jsonify
 
 from parameters.skeleton_with_additions import zhangSuen, remove_staircases
 
+import pandas as pd
+import scipy
+from scipy.signal import savgol_filter
+from scipy.signal import argrelextrema
+from scipy.ndimage.filters import gaussian_filter1d
+
 global_params = {}
+
+
+def area_under_brick(src, step=8):
+
+    img = np.copy(src)
+    #print("input shape: ", img.shape)
+    #cv2.imwrite("bricks-in.png", img)
+
+    img = cv2.copyMakeBorder(img, step - img.shape[0]%step, 0, step - img.shape[1]%step, 0, cv2.BORDER_REFLECT)
+
+    #print("output shape: ", img.shape)
+
+    for i in range(0,img.shape[0],step):
+        for j in range(0,img.shape[1],step):
+            if cv2.countNonZero(img[i:(i+step), j:(j+step)]) > 0:
+                img[i:(i+step), j:(j+step)] = 255
+    
+    img = img[:src.shape[0], :src.shape[1]]
+
+    #cv2.imwrite("bricks-out.png", img)
+
+    return cv2.countNonZero(img)
+
+
 
 def count_params(src, step=8):
 
@@ -17,10 +47,7 @@ def count_params(src, step=8):
     img = cv2.copyMakeBorder(img, step - img.shape[1]%step, 0, step - img.shape[0]%step, 0, cv2.BORDER_REFLECT)
     img = cv2.bitwise_not(img)
 
-    #th2 = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_MEAN_C,\
-    #        cv2.THRESH_BINARY_INV,35,2)
-
-    ret, th2 = cv2.threshold(img, 255-50, 255, cv2.THRESH_BINARY_INV)
+    _,th2 = cv2.threshold(img, 255-50, 255, cv2.THRESH_BINARY_INV)
 
     print(th2.shape)
     threshold = np.copy(th2[step - src.shape[1]%step:, step - src.shape[0]%step:])
@@ -76,6 +103,7 @@ def skeletonize(src):
     global_params['L'] = cv2.countNonZero(img_b)
 
     return np.uint8(img_b * 255)
+
 
 def get_skeleton_map(skeleton, dist_map):
     return np.uint8(cv2.bitwise_and(dist_map,dist_map, mask=skeleton))
@@ -194,16 +222,23 @@ def extract_vessels(skeleton, binary_image, filename='vessels.json', step=10):
     return dots_dict, vess_dict, radius_dict, params_dict
 
 
-import pandas as pd
-import scipy
-from scipy.signal import savgol_filter
-from scipy.signal import argrelextrema
-
-def eval_vessel(vessel):
+def eval_vessel(vessel, index=None):
 
     arr = rotate(vessel)
+    rotated_arr = arr.copy()
+
     params,yhat = get_params(arr)
     harmonics = get_harmony(arr)
+
+    if index:
+        with open('debug/' + str(index) + '.txt', 'w') as outfile:
+            json.dump(vessel, outfile)
+            json.dump('~', outfile)
+            json.dump(rotated_arr.tolist() , outfile)
+            json.dump('~', outfile)
+            json.dump(params, outfile)
+            json.dump('~', outfile)
+            json.dump(yhat.tolist() , outfile)
     
     return params, harmonics
 
@@ -213,7 +248,7 @@ def eval_vessels(vessels):
     harmonics_dict = {}
 
     for k in vessels:
-        params, harmonics = eval_vessel(vessels[k])
+        params, harmonics = eval_vessel(vessels[k], k)
         params_dict[k] = params
         harmonics_dict[k] = harmonics
 
@@ -262,6 +297,7 @@ def get_harmony(arr):
 def get_params(arr):
 
     yhat = savgol_filter(arr[1], 21, 3, mode='nearest')
+    yhat = gaussian_filter1d(yhat, 1)
 
     indexes = np.concatenate( (argrelextrema(yhat,np.less)[0] , argrelextrema(yhat, np.greater)[0] ) , axis=0 )
 
@@ -298,6 +334,9 @@ def postprocessing(img):
 
     print('start')
     result_3 = skeletonize(result[1])
+
+    global_params['S'] = area_under_brick(result_3)
+
     print('done')
 
     print(time.time() - start)

@@ -798,7 +798,8 @@ $(function(){
   });
 
   $('#save_report_img_ref').click( function(e) {
-
+    $(this).removeAttr('href');
+    $(this).removeAttr('download');
     $(this).attr({'href': $("#main-canvas")[0].toDataURL('image/png') , 'download': $(this).prev().val() + '.png'});
   });
 
