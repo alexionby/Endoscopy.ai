@@ -1,6 +1,6 @@
 # Endoscopy.ai
 U-net for endoscopy.
 
-ToDo
+ToDo:
 - [ ] Axis rotation bug
 - [ ] Write files to Stream
