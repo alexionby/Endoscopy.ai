@@ -1,6 +1,6 @@
 # Endoscopy.ai
 U-net for endoscopy.
 
-- [x] Finish my changes
-- [ ] Push my commits to GitHub
-- [ ] Open a pull request
+ToDo
+- [ ] Axis rotation bug
+- [ ] Write files to Stream
