@@ -14,3 +14,4 @@ https://github.com/raghakot/keras-resnet/blob/master/resnet.py
 https://github.com/fchollet/deep-learning-models/blob/master/resnet50.py
 https://github.com/broadinstitute/keras-resnet
 https://blog.waya.ai/deep-residual-learning-9610bb62c355
+https://arxiv.org/pdf/1707.03718.pdf
