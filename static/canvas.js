@@ -87,7 +87,7 @@ $(function(){
       for ( const i in vessels[key] ) {
         ctx_main.beginPath();
         ctx_main.arc(vessels[key][i][1] * this.multiplier, vessels[key][i][0] * this.multiplier, 1, 0, 2 * math.PI, false);
-        ctx_main.fillStyle = "rgb(255,0,255)";
+        ctx_main.fillStyle = "rgb(0,0,255)";
         ctx_main.fill();
       }
     }
@@ -165,6 +165,80 @@ $(function(){
     }
   }
 
+  Scene.prototype.set_vessel_values = function(index) {
+
+        console.log(this.vessels_parameters[index]);
+
+        const avr_rad = math.round(this.vessels_parameters[index][2],4);
+        $('#avr-rad').text(math.round(this.vessels_parameters[index][2],4));
+
+        const std = math.round(this.vessels_parameters[index][3],4)
+        $('#std').text(std);
+
+        const area = Number(this.vessels_parameters[index][4]);
+        $('#area').text(area);
+
+        const length = Number(this.vessels_parameters[index][5]);
+        $('#length').text(length);
+
+        const auc = Number(this.plot_params[index]['area_under_curve']); // ok
+        $('#auc').text(auc.toFixed());
+
+        const bends = Number(this.plot_params[index]['bend_count']); // ok
+        $('#bends').text(bends.toFixed());
+        
+        const meanAmpl = Number(this.plot_params[index]['mean_peaks']); // ok
+        $('#mean-ampl').text(meanAmpl.toFixed(4));
+
+        const absMeanAmpl = Number(this.plot_params[index]['mean_abs_peaks']); // ok
+        $('#abs-mean-ampl').text(absMeanAmpl.toFixed(4));
+
+        const stdAmpl = Number(this.plot_params[index]['std_amplitude']);
+        $('#std-ampl').text(stdAmpl.toFixed(4));
+
+        const stdAmplPeaks = Number(this.plot_params[index]['std_peaks']);
+        $('#std-ampl-peaks').text(stdAmplPeaks.toFixed(4));
+
+        const maxAmpl = Number(this.plot_params[index]['max_amplitude']); // ok
+        $('#max-ampl').text(maxAmpl.toFixed(4));
+
+        const minAmpl = Number(this.plot_params[index]['min_amplitude']); // ok
+        $('#min-ampl').text(minAmpl.toFixed(4));
+        
+        const rpl = math.divide(math.multiply(math.pow(bends, 2), stdAmpl),length);
+        $('#rpl').text(rpl.toFixed(4));
+
+        const kdist = math.multiply(100, this.eval_kdist(index));
+        $('#kdist').text(kdist.toFixed(4));
+
+        const bendity = math.divide( math.subtract(maxAmpl, minAmpl) , length );
+        $('#bendity').text(bendity.toFixed(4));
+
+        const snt = math.multiply(math.pow(bendity, 2), rpl, math.sqrt(kdist));
+        $('#snt').text(snt.toFixed(4));
+
+        this.draw_scene();
+        this.draw_plot(index);
+  }
+
+  Scene.prototype.eval_kdist = function(index) {
+
+    const harmonic_power = this.harmonics[index][1];
+    const [first_harm, ...others] = harmonic_power;
+    let kdist = 0;
+    for (let harmonic of others) {
+      kdist = math.add(kdist, Number(harmonic));
+    }
+    console.log(kdist)
+
+    kdist = math.divide(kdist, Number(first_harm));
+    kdist = math.sqrt(kdist)
+
+    console.log(kdist, first_harm)
+
+    return kdist
+  }
+
   Scene.prototype.merge_vessels = function() {
 
     let that = this;
@@ -227,19 +301,7 @@ $(function(){
         that.selected_vessels = [];
         that.current_vessel = index;
 
-        $('#param3').text(math.round(that.vessels_parameters[index][2],4));
-        $('#param4').text(math.round(that.vessels_parameters[index][3],4));
-        $('#param5').text(that.vessels_parameters[index][4]);
-        $('#param6').text(that.vessels_parameters[index][5]);
-        $('#param7').text( +(that.plot_params[index]['area_under_curve']).toFixed(4) );
-        $('#param8').text( +(that.plot_params[index]['bend_count']).toFixed(4) );
-        $('#param9').text( +(that.plot_params[index]['mean_abs_peaks']).toFixed(4) );
-        $('#param10').text( +(that.plot_params[index]['std_amplitude']).toFixed(4) );
-        $('#param11').text( +(that.plot_params[index]['max_amplitude']).toFixed(4) );
-        $('#param12').text( +(that.plot_params[index]['min_amplitude']).toFixed(4) );
-
-        that.draw_scene();
-        that.draw_plot(index);
+        that.set_vessel_values(index);
       });
 
 
@@ -338,21 +400,10 @@ $(function(){
         if (that.current_vessel !== vessel) {
 
           that.current_vessel = vessel;
+          that.set_vessel_values(vessel);
 
-          $('#param3').text(math.round(that.vessels_parameters[vessel][2],4));
-          $('#param4').text(math.round(that.vessels_parameters[vessel][3],4));
-          $('#param5').text(that.vessels_parameters[vessel][4]);
-          $('#param6').text(that.vessels_parameters[vessel][5]);
-          $('#param7').text( +(that.plot_params[vessel]['area_under_curve']).toFixed(4) );
-          $('#param8').text( +(that.plot_params[vessel]['bend_count']).toFixed(4) );
-          $('#param9').text( +(that.plot_params[vessel]['mean_abs_peaks']).toFixed(4) );
-          $('#param10').text( +(that.plot_params[vessel]['std_amplitude']).toFixed(4) );
-          $('#param11').text( +(that.plot_params[vessel]['max_amplitude']).toFixed(4) );
-          $('#param12').text( +(that.plot_params[vessel]['min_amplitude']).toFixed(4) );
-          $('#param13').text( +(that.plot_params[vessel]['mean_peaks']).toFixed(4) );
-          $('#param14').text( +(that.plot_params[vessel]['std_peaks']).toFixed(4) );
-
-          that.draw_plot(vessel);
+          return
+          //that.draw_plot(vessel);
         }
 
         that.draw_scene();
@@ -466,7 +517,7 @@ $(function(){
 
     ctx_main.save();
     ctx_main.beginPath();
-    ctx_main.arc(this.selected_pixel[0] * this.multiplier, this.selected_pixel[1] * this.multiplier, 2, 0, 2 * math.PI, false);
+    ctx_main.arc(this.selected_pixel[0] * this.multiplier, this.selected_pixel[1] * this.multiplier, 4, 0, 2 * math.PI, false);
     ctx_main.fillStyle = "rgb(0,0,255)";
     ctx_main.fill();
     ctx_main.restore();

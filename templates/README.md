@@ -1,0 +1,1 @@
+After installation chage cDKTree to cdktree in lib/scipy/spatial/

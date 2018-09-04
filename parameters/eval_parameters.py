@@ -1,13 +1,19 @@
-import cv2
+#import cv2
+from skimage.io import imsave
+from skimage.util import pad, invert
+from skimage.morphology import erosion, square
+from skimage.draw import circle
+
 import numpy as np
 import json
-import time
+
+#dev modules
+#import time, cv2
 
 from flask import jsonify
 
 from parameters.skeleton_with_additions import zhangSuen, remove_staircases
 
-import pandas as pd
 import scipy
 from scipy.signal import savgol_filter
 from scipy.signal import argrelextrema
@@ -15,55 +21,46 @@ from scipy.ndimage.filters import gaussian_filter1d
 
 global_params = {}
 
-
 def area_under_brick(src, step=8):
-
     img = np.copy(src)
-    #print("input shape: ", img.shape)
-    #cv2.imwrite("bricks-in.png", img)
-
-    img = cv2.copyMakeBorder(img, step - img.shape[0]%step, 0, step - img.shape[1]%step, 0, cv2.BORDER_REFLECT)
-
-    #print("output shape: ", img.shape)
+    img = pad(img, ((step - img.shape[0]%step, 0), (step - img.shape[1]%step, 0)), mode="reflect") ## possible axes error
 
     for i in range(0,img.shape[0],step):
         for j in range(0,img.shape[1],step):
-            if cv2.countNonZero(img[i:(i+step), j:(j+step)]) > 0:
+            if np.count_nonzero(img[i:(i+step), j:(j+step)]) > 0:
                 img[i:(i+step), j:(j+step)] = 255
     
     img = img[:src.shape[0], :src.shape[1]]
-
-    #cv2.imwrite("bricks-out.png", img)
-
-    return cv2.countNonZero(img)
-
+    return np.count_nonzero(img)
 
 
 def count_params(src, step=8):
 
     bricks_count = 0
+    w,h = src.shape
 
     img = np.copy(src)
-    img = cv2.copyMakeBorder(img, step - img.shape[1]%step, 0, step - img.shape[0]%step, 0, cv2.BORDER_REFLECT)
-    img = cv2.bitwise_not(img)
+    img = pad(img, ( (step - h % step, 0),(step - w % step, 0)), mode="reflect")
+    img = np.bitwise_not(img)
 
-    _,th2 = cv2.threshold(img, 255-50, 255, cv2.THRESH_BINARY_INV)
+    th2 = img.copy()
+    th2[ th2 > 205 ] = 255
+    th2[ th2 <= 205] = 0
+    th2 = invert(th2)
 
-    print(th2.shape)
-    threshold = np.copy(th2[step - src.shape[1]%step:, step - src.shape[0]%step:])
+    threshold = np.copy(th2[step - h % step:, step - w % step:])
 
-    for i in range(0,img.shape[0],step):
-        for j in range(0,img.shape[1],step):
-            if cv2.countNonZero(th2[i:(i+step), j:(j+step)]) != 0:
+    for i in range(0,w,step):
+        for j in range(0,h,step):
+            if np.count_nonzero(th2[i:(i+step), j:(j+step)]) != 0:
                 th2[i:(i+step), j:(j+step)] = 255
                 bricks_count += 1
 
-    result = th2[:src.shape[0], :src.shape[1]]
-
-    area_under_brick = cv2.countNonZero(result)
+    result = th2[:w, :h]
+    area_under_brick = np.count_nonzero(result)
 
     global_params['S'] = area_under_brick
-    global_params['NonZero'] = cv2.countNonZero(threshold)
+    global_params['NonZero'] = np.count_nonzero(threshold)
 
     return result, threshold, area_under_brick
 
@@ -72,52 +69,42 @@ def create_map(src, step=10):
     img = np.copy(src)
     dist_map = np.zeros(src.shape)
 
-    counter = 0
     color = step
+    kernel = square(3)
 
-    while cv2.countNonZero(img) > 0:
+    while np.count_nonzero(img) > 0:
 
         temp = np.copy(img)
-        kernel = np.ones((3,3),np.uint8)
-        img = cv2.erode(img, kernel, iterations = 1)
-
-        temp = cv2.bitwise_or(temp,img)
-        temp[ temp > 0 ] = color
+        img = erosion(img, kernel)
+        temp = np.bitwise_or(temp, img)
+        dist_map[temp > 0] = color
         color += step
 
-        dist_map += temp
-
-        counter +=1
-
-    return dist_map
+    return np.uint8(dist_map)
 
 def skeletonize(src):
 
     img = np.copy(src)
+    img[ img <= 127] = 0
+    img[ img > 127 ] = 1
 
-    ret, img_b = cv2.threshold(img, 127,255, cv2.THRESH_BINARY)
-    img_b = img_b / 255.
-    img_b = zhangSuen(img_b)
-    img_b = remove_staircases(img_b)
+    img = zhangSuen(img.astype(np.float))
+    img = remove_staircases(img)
 
-    global_params['L'] = cv2.countNonZero(img_b)
-
-    return np.uint8(img_b * 255)
+    global_params['L'] = np.count_nonzero(img)
+    return np.uint8(img * 255)
 
 
 def get_skeleton_map(skeleton, dist_map):
-    return np.uint8(cv2.bitwise_and(dist_map,dist_map, mask=skeleton))
+    return np.bitwise_and(dist_map, skeleton)
 
 
 def extract_vessels(skeleton, binary_image, filename='vessels.json', step=10):
 
+    print(skeleton.shape, binary_image.shape)
+
     img = np.copy(skeleton)
     thr = np.copy(binary_image)
-
-    vess_img = np.zeros(img.shape, dtype=np.uint8)
-    dots_img = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
-
-    #img = np.lib.pad(img, ((1,1),(1,1),(0,0)), 'constant')
 
     img[:,-1] = 0
     img[:,0] = 0
@@ -134,6 +121,8 @@ def extract_vessels(skeleton, binary_image, filename='vessels.json', step=10):
 
     i,j = 1,1
 
+    print("Before loop")
+
     while i < img.shape[0] - 1:
 
         j = 1
@@ -141,7 +130,7 @@ def extract_vessels(skeleton, binary_image, filename='vessels.json', step=10):
 
         while j < img.shape[1] - 1:
 
-            if cv2.countNonZero( img[i-1:i+2, j-1:j+2] ) == 2 and img[i,j] > 0 :
+            if np.count_nonzero( img[i-1:i+2, j-1:j+2] ) == 2 and img[i,j] > 0 :
 
                 points = [[int(i),int(j)]]
                 points_value = [int(img[i,j] // step)]
@@ -152,7 +141,7 @@ def extract_vessels(skeleton, binary_image, filename='vessels.json', step=10):
                 k = k[0] + i - 1
                 n = n[0] + j - 1
 
-                while cv2.countNonZero( img[ k-1:k+2, n-1:n+2] ) == 2:
+                while np.count_nonzero( img[ k-1:k+2, n-1:n+2] ) == 2:
 
                     points.append([int(k), int(n) ])
                     points_value.append( int( img[k,n] // step ) )
@@ -162,9 +151,7 @@ def extract_vessels(skeleton, binary_image, filename='vessels.json', step=10):
                     k = pad_k[0] + k - 1
                     n = pad_n[0] + n - 1
 
-                #img[k,n] = 0
-
-                if cv2.countNonZero( img[ k-1:k+2, n-1:n+2] ) == 1:
+                if np.count_nonzero( img[ k-1:k+2, n-1:n+2] ) == 1:
                     img[k,n] = 0
                 else:
                     img[k-1:k+2,n-1:n+2] = 0
@@ -181,9 +168,10 @@ def extract_vessels(skeleton, binary_image, filename='vessels.json', step=10):
                     max_rad = np.max(temp_points)
 
                     for x,y in points:
-                        cv2.circle(temp, (y,x), max_rad, 255, -1)
+                        rr, cc = circle(x, y, max_rad + 1, shape=temp.shape)
+                        temp[rr, cc] = 255 
 
-                    area = cv2.countNonZero( cv2.bitwise_and(thr,thr,mask=temp) )
+                    area = np.count_nonzero( np.bitwise_and(thr, thr, where=temp.astype(np.bool)))
 
                     params = [float(np.min(temp_points)), float(np.max(temp_points)), float(np.round(np.mean(temp_points), 2) ), float(np.round(np.std(temp_points),2) ) , float(area)]
 
@@ -205,8 +193,11 @@ def extract_vessels(skeleton, binary_image, filename='vessels.json', step=10):
 
         i += 1
 
+    print("After loop")
+
     global_params['N'] = branch_count
 
+    """
     with open('dots.json', 'w') as fp:
         json.dump(dots_dict, fp)
 
@@ -218,6 +209,7 @@ def extract_vessels(skeleton, binary_image, filename='vessels.json', step=10):
 
     with open('params.json', 'w') as fp:
         json.dump(params_dict, fp)
+    """
 
     return dots_dict, vess_dict, radius_dict, params_dict
 
@@ -230,16 +222,20 @@ def eval_vessel(vessel, index=None):
     params,yhat = get_params(arr)
     harmonics = get_harmony(arr)
 
+    # reopen in case of debug
+    """
+
     if index:
         with open('debug/' + str(index) + '.txt', 'w') as outfile:
             json.dump(vessel, outfile)
-            json.dump('~', outfile)
+            json.dump("~", outfile)
             json.dump(rotated_arr.tolist() , outfile)
-            json.dump('~', outfile)
+            json.dump("~", outfile)
             json.dump(params, outfile)
-            json.dump('~', outfile)
+            json.dump("~", outfile)
             json.dump(yhat.tolist() , outfile)
-    
+    """
+
     return params, harmonics
 
 def eval_vessels(vessels):
@@ -262,7 +258,11 @@ def rotate(pixels):
     p1 = np.array( [ pixels[-1,0], 0 ] )
     p2 = pixels[-1]
 
-    angle = -1 * np.sign(p2[1]) * np.arccos( np.dot(p1,p2) / np.sqrt( np.dot(p1,p1) * np.dot(p2,p2) ) )
+    try:
+        angle = -1 * np.sign(p2[0]) * np.sign(p2[1]) * np.arccos( float(np.dot(p1,p2)) / pow( float(np.dot(p1,p1)) * float(np.dot(p2,p2)) , 0.5 ) )
+    except ZeroDivisionError:
+        angle = -1 * np.sign(p2[0]) * np.sign(p2[1]) * np.arccos( float(np.dot(p1,p2)) / 1e-6 )
+    print("alt_angle: ", angle)
 
     c, s = np.cos(angle), np.sin(angle)
     R = np.array([[c, s], [-s, c]])
@@ -294,19 +294,35 @@ def get_harmony(arr):
     return [x_real, y_real]
 
 
-def get_params(arr):
+def get_params(arr, rotation_number=3):
 
-    yhat = savgol_filter(arr[1], 21, 3, mode='nearest')
+    yhat = arr[1].copy()
+
+    max_indexes = []
+    for angle in np.arange(-0.05 * rotation_number, 0.05 * (rotation_number+1), 0.05):
+        c, s = np.cos(angle), np.sin(angle)
+        R = np.array([[c, s], [-s, c]])
+        rotated_vessel = arr.T.dot(R).T
+        rotated_y = savgol_filter(rotated_vessel[1], 21, 3, mode='nearest')
+        rotated_y = gaussian_filter1d(rotated_y, 1)
+        peaks = np.concatenate( (argrelextrema(rotated_y,np.less)[0] , argrelextrema(rotated_y, np.greater)[0] ) , axis=0 )
+        max_indexes.append(len(peaks))
+        #if len(peaks) > max_indexes:
+        #    max_indexes = len(peaks)
+
+    print(max_indexes)
+    max_indexes = max(max_indexes)
+
+    yhat = savgol_filter(yhat, 21, 3, mode='nearest')
     yhat = gaussian_filter1d(yhat, 1)
-
     indexes = np.concatenate( (argrelextrema(yhat,np.less)[0] , argrelextrema(yhat, np.greater)[0] ) , axis=0 )
-
     np.trapz( np.absolute(yhat), dx=1.0, axis=-1)
     scipy.integrate.simps( np.absolute(yhat) )
 
     return {
             #'len': len(arr[0]),
-            'bend_count': len(argrelextrema(yhat, np.less)[0]) + len(argrelextrema(yhat, np.greater)[0]),
+            #'bend_count': len(argrelextrema(yhat, np.less)[0]) + len(argrelextrema(yhat, np.greater)[0]),
+            'bend_count': max_indexes,
             'area_under_curve': float( np.nan_to_num(scipy.integrate.simps( np.absolute(yhat) ) ) ),
             'mean_abs_peaks': float( np.nan_to_num( np.mean(np.abs( yhat[indexes])))),
             'max_amplitude': float( np.nan_to_num(np.max(yhat))),
@@ -318,41 +334,42 @@ def get_params(arr):
 
 def postprocessing(img):
 
-    print(img.shape, img.dtype)
+    result_1 = count_params(img)
+    result_2 = create_map(result_1[1], step=10)
+    result_3 = skeletonize(result_1[1])
+    result_4 = get_skeleton_map(result_2.copy(), result_3.copy())
 
-    result = count_params(img)
+    """
+    if True:
+        imsave('segmented.jpg', result_1[1])
+        imsave('map.jpg', result_2)
+        imsave('skeleton.jpg', result_3)
+        imsave('skeleton_map.jpg', result_4)
+    """
 
-    cv2.imwrite('skeleton.jpg', result[1])
+    dots_dict, vess_dict, radius_dict, params_dict = extract_vessels(result_4, result_1[1], step=10)
 
-    step = 2
+    global_params['S'] = area_under_brick(result_3.copy())
 
-    result_2 = create_map(result[1], step=step)
+    try:
+        global_params['lo'] = global_params['L']/global_params['S']
+    except ZeroDivisionError:
+        global_params['lo'] = global_params['L']/1e-6
 
-    cv2.imwrite('skeleton_map.jpg', result_2)
+    try:
+        global_params['B'] = global_params['N']/global_params['L']
+    except ZeroDivisionError:
+        global_params['B'] = global_params['N']/1e-6
 
-    start = time.time()
+    try:
+        global_params['Si'] = global_params['lo']/global_params['B']
+    except ZeroDivisionError:
+        global_params['Si'] = global_params['lo']/1e-6
 
-    print('start')
-    result_3 = skeletonize(result[1])
-
-    global_params['S'] = area_under_brick(result_3)
-
-    print('done')
-
-    print(time.time() - start)
-
-    result_4 = get_skeleton_map(result_3, result_2)
-
-    print(result_4.dtype, result[1].dtype)
-
-    dots_dict, vess_dict, radius_dict, params_dict = extract_vessels(result_4, result[1], step=step)
-
-    global_params['lo'] = global_params['L']/global_params['S']
-    global_params['B'] = global_params['N']/global_params['L']
-    global_params['Si'] = global_params['lo']/global_params['B']
-
+    """
     with open('global_params.json', 'w') as fp:
         json.dump(global_params, fp)
+    """
 
     plot_params, frequency_params =  eval_vessels(vess_dict)
 

@@ -1,7 +1,10 @@
 import os
 import numpy as np
 
-import cv2
+#import cv2
+from skimage.util import pad
+from skimage.io import imread
+
 import keras
 from keras.models import Model
 
@@ -10,29 +13,25 @@ from model_cnn.train import get_unet
 image_rows = 192
 image_cols = image_rows
 
-batch_size = 64
+batch_size = 16
 
 tile_size = 96
 tile_pad  = ( image_rows - tile_size ) // 2
 
-def make_prediction(image_name=None, img=None, weights='DRIVE.h5'):
+model = None
 
-    if image_name is not None:
-        if image_name.endswith('.png') or image_name.endswith('.PNG') :
-            img = cv2.imread(os.path.join(data_path, image_name) , 0)
-        else:
-            return
+def make_prediction(img=None, weights='DRIVE.h5'):
 
-    elif img is not None:
-        img = img
-    else:
-        return
-
-    img = img.astype('float32') / 255.
+    try:
+        img = img.astype('float32') / 255.
+    except:
+        print("You have to provide an image")
+        raise
 
     border_size = image_rows
 
-    img_borded = cv2.copyMakeBorder(img, border_size , border_size, border_size, border_size, cv2.BORDER_REFLECT)
+    #img_borded = cv2.copyMakeBorder(img, border_size , border_size, border_size, border_size, cv2.BORDER_REFLECT)
+    img_borded = pad(img, ((border_size, border_size),(border_size, border_size)), "reflect")
 
     num_h_blocks = img_borded.shape[0] // tile_size
     num_w_blocks = img_borded.shape[1] // tile_size
@@ -51,10 +50,12 @@ def make_prediction(image_name=None, img=None, weights='DRIVE.h5'):
 
     print(data.shape)
 
-    model = get_unet(image_rows, image_cols)
-    model.load_weights('model_cnn/' + weights)
-
-    result = model.predict(data,batch_size=batch_size,verbose=1)
+    global model
+    if not model:
+        model = get_unet(image_rows, image_cols)
+    
+    model.load_weights(os.path.join("models",weights))
+    result = model.predict(data, batch_size=batch_size, verbose=1)
 
     res = np.zeros(img_borded.shape, dtype=np.uint8)
 
@@ -73,5 +74,3 @@ def make_prediction(image_name=None, img=None, weights='DRIVE.h5'):
 
     res = res[image_rows:res.shape[0]-image_rows, image_cols:res.shape[1] - image_rows]
     return res
-
-#cv2.imwrite('res_' + image_name[:-4] + '.tif', res)

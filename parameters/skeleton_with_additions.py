@@ -1,40 +1,11 @@
-import cv2
+from skimage.util import pad
 from skimage.morphology import skeletonize
 
 import numpy as np
 
-from numba import jit, void
-
-import sys
-import time
-
-@jit
-def neighbours(x,y,img):
-    "Return 8-neighbours of image point P1(x,y), in a clockwise order"
-    x_1, y_1, x1, y1 = x-1, y-1, x+1, y+1
-    return [ img[x_1][y], img[x_1][y1], img[x][y1], img[x1][y1],     # P2,P3,P4,P5
-                img[x1][y], img[x1][y_1], img[x][y_1], img[x_1][y_1] ]    # P6,P7,P8,P9
-
-@jit
-def transitions(neighbours):
-    "No. of 0,1 patterns (transitions from 0 to 1) in the ordered sequence"
-    n = neighbours + neighbours[0:1]      # P2, P3, ... , P8, P9, P2
-    neighbours_sum = 0
-
-    for i in range(len(neighbours)):
-
-        neighbours_sum += n[i+1] - n[i]*n[i+1]
-
-    return neighbours_sum
-
-"""
-def transitions(neighbours):
-    "No. of 0,1 patterns (transitions from 0 to 1) in the ordered sequence"
-    n = neighbours + neighbours[0:1]      # P2, P3, ... , P8, P9, P2
-    return sum( (n1, n2) == (0, 1) for n1, n2 in zip(n, n[1:]) )  # (P2,P3), (P3,P4), ... , (P8,P9), (P9,P2)
-"""
-
 def zhangSuen(image):
+
+    image = image.copy()
 
     image[0, :] = 0
     image[-1, :] = 0
@@ -414,7 +385,8 @@ def acute_angle_emphasis(orig_img):
 
 def remove_staircases(orig_img):
 
-    img = cv2.copyMakeBorder(orig_img, 1,1,1,1, cv2.BORDER_CONSTANT, 0)
+    #img = cv2.copyMakeBorder(orig_img, 1,1,1,1, cv2.BORDER_CONSTANT, 0)
+    img = pad(orig_img, ((1,1), (1,1)), mode='constant')
 
     for k in range(2):
 
@@ -461,17 +433,3 @@ def remove_staircases(orig_img):
             img[i,j] = 0
 
     return img[1:-1,1:-1]
-
-def find_k_connect_points(img, connections=4):
-
-    points = np.copy(img)
-
-    for i in range(1, img.shape[0] - 1) :
-
-        for j in range(1, img.shape[1] - 1) :
-
-            k = img[i-1:i+2, j - 1: j + 2]
-
-            if cv2.countNonZero(k) >= connections and k[1,1] > 0 :
-
-                cv2.circle(points,(j,i), 0, 0, -1)

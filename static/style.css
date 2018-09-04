@@ -240,3 +240,7 @@ div#parameters > div {
   width: 80%;
 
 }
+
+.div-line {
+  border-bottom: 4px solid rgb(0,0,255);
+}
